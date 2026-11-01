@@ -1,0 +1,7 @@
+.DS_Store
+.scratch/
+dist/
+node_modules/
+__pycache__/
+.venv/
+docs/repository-map.json

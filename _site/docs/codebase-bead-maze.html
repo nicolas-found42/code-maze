@@ -1,0 +1,1288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prompt Pack — Codebase Bead Maze</title>
+    <script>
+      if (!/[?&](map|photo|render|capture)=/.test(location.search)) {
+        location.replace("./bead-maze-photo3d.html");
+      }
+    </script>
+    <style>
+      :root {
+        --bg: #f3efe6;
+        --surface: #fffaf0;
+        --ink: #2b241b;
+        --muted: #5b5143;
+        --line: #b8a98f;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      .wrap {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 16px;
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 16px;
+      }
+      @media (max-width: 900px) {
+        .wrap {
+          grid-template-columns: 1fr;
+        }
+      }
+      .stage {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        min-height: 560px;
+        background: #e8ddc6;
+      }
+      #scene {
+        width: 100%;
+        height: 560px;
+        display: block;
+      }
+      .stage::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          radial-gradient(ellipse at center, transparent 52%, rgba(40, 28, 16, 0.22) 100%),
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='0.16'/></svg>");
+        opacity: 0.35;
+      }
+      body.photo .wrap {
+        display: block;
+        max-width: none;
+        padding: 0;
+      }
+      body.photo main h1,
+      body.photo .lede,
+      body.photo .panel {
+        display: none;
+      }
+      body.photo .stage {
+        border: 0;
+        border-radius: 0;
+        min-height: 100vh;
+      }
+      body.photo #scene {
+        height: 100vh;
+      }
+      body.photo .stage::after {
+        opacity: 0.2;
+      }
+      body.render .wrap {
+        display: block;
+        max-width: none;
+        padding: 0;
+      }
+      body.render main h1,
+      body.render .lede,
+      body.render .panel {
+        display: none;
+      }
+      body.render .stage {
+        border: 0;
+        border-radius: 0;
+        min-height: 100vh;
+        background: #e9e4d8 url("./bead-maze-render-final.png") center / cover no-repeat;
+      }
+      body.render #scene {
+        display: none;
+      }
+      body.render .stage::after {
+        display: none;
+      }
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <main>
+        <h1>Codebase Bead Maze</h1>
+        <p class="lede">
+          A 3D map of the prompt-pack repository rendered with WebGL.
+          <a href="./bead-maze-photo3d.html">Photoreal capture →</a>
+        </p>
+        <div class="stage" id="stage"><div id="scene"></div></div>
+      </main>
+      <aside class="panel" aria-labelledby="detail-title">
+        <h2 id="detail-title">Selected bead</h2>
+        <div id="detail-meta">Click a bead.</div>
+        <div id="detail-body"></div>
+      </aside>
+    </div>
+    <script src="./vendor/three.min.js"></script>
+    <script>
+      const params = new URLSearchParams(location.search);
+      if (params.get("photo")) document.body.classList.add("photo");
+      if (params.get("render")) document.body.classList.add("render");
+
+      const GROUPS = [
+        { id: "g-app", label: "app/", x: -260, z: -120 },
+        { id: "g-data", label: "data/", x: 220, z: -80 },
+        { id: "g-styles", label: "styles/", x: -220, z: 150 },
+        { id: "g-scripts", label: "scripts/", x: 200, z: 170 },
+        { id: "g-root", label: "root", x: 0, z: 0 },
+      ];
+      const BEADS = [
+        {
+          id: "index.html",
+          group: "g-root",
+          label: "index.html",
+          color: "#7a4cc2",
+          x: 0,
+          y: 40,
+          z: 0,
+        },
+        {
+          id: "app/main.js",
+          group: "g-app",
+          label: "main.js",
+          color: "#e24a3b",
+          x: -300,
+          y: 34,
+          z: -150,
+        },
+        {
+          id: "app/state.js",
+          group: "g-app",
+          label: "state.js",
+          color: "#e24a3b",
+          x: -230,
+          y: 30,
+          z: -180,
+        },
+        {
+          id: "app/catalog.js",
+          group: "g-app",
+          label: "catalog.js",
+          color: "#e24a3b",
+          x: -330,
+          y: 28,
+          z: -90,
+        },
+        {
+          id: "app/search.js",
+          group: "g-app",
+          label: "search.js",
+          color: "#e24a3b",
+          x: -200,
+          y: 32,
+          z: -110,
+        },
+        {
+          id: "app/url.js",
+          group: "g-app",
+          label: "url.js",
+          color: "#e24a3b",
+          x: -260,
+          y: 26,
+          z: -60,
+        },
+        {
+          id: "app/tree.js",
+          group: "g-app",
+          label: "tree.js",
+          color: "#e24a3b",
+          x: -360,
+          y: 30,
+          z: -130,
+        },
+        {
+          id: "data/taxonomy.js",
+          group: "g-data",
+          label: "taxonomy.js",
+          color: "#2f6fd6",
+          x: 180,
+          y: 30,
+          z: -120,
+        },
+        {
+          id: "data/featured.js",
+          group: "g-data",
+          label: "featured.js",
+          color: "#2f6fd6",
+          x: 260,
+          y: 28,
+          z: -60,
+        },
+        {
+          id: "data/prompts/index.js",
+          group: "g-data",
+          label: "prompts/index.js",
+          color: "#2f6fd6",
+          x: 210,
+          y: 34,
+          z: -170,
+        },
+        {
+          id: "data/prompts/coding.js",
+          group: "g-data",
+          label: "coding.js",
+          color: "#2f6fd6",
+          x: 140,
+          y: 26,
+          z: -200,
+        },
+        {
+          id: "data/prompts/writing.js",
+          group: "g-data",
+          label: "writing.js",
+          color: "#2f6fd6",
+          x: 300,
+          y: 24,
+          z: -190,
+        },
+        {
+          id: "data/prompts/security.js",
+          group: "g-data",
+          label: "security.js",
+          color: "#2f6fd6",
+          x: 330,
+          y: 22,
+          z: -130,
+        },
+        {
+          id: "data/prompts/operations.js",
+          group: "g-data",
+          label: "operations.js",
+          color: "#2f6fd6",
+          x: 170,
+          y: 20,
+          z: -90,
+        },
+        {
+          id: "styles/tokens.css",
+          group: "g-styles",
+          label: "tokens.css",
+          color: "#3fa34d",
+          x: -260,
+          y: 20,
+          z: 120,
+        },
+        {
+          id: "styles/base.css",
+          group: "g-styles",
+          label: "base.css",
+          color: "#3fa34d",
+          x: -180,
+          y: 24,
+          z: 170,
+        },
+        {
+          id: "styles/layout.css",
+          group: "g-styles",
+          label: "layout.css",
+          color: "#3fa34d",
+          x: -300,
+          y: 22,
+          z: 180,
+        },
+        {
+          id: "styles/tree.css",
+          group: "g-styles",
+          label: "tree.css",
+          color: "#3fa34d",
+          x: -200,
+          y: 18,
+          z: 110,
+        },
+        {
+          id: "styles/cards.css",
+          group: "g-styles",
+          label: "cards.css",
+          color: "#3fa34d",
+          x: -140,
+          y: 26,
+          z: 150,
+        },
+        {
+          id: "styles/controls.css",
+          group: "g-styles",
+          label: "controls.css",
+          color: "#3fa34d",
+          x: -340,
+          y: 24,
+          z: 140,
+        },
+        {
+          id: "scripts/check-data.mjs",
+          group: "g-scripts",
+          label: "check-data.mjs",
+          color: "#f0b429",
+          x: 160,
+          y: 22,
+          z: 140,
+        },
+        {
+          id: "scripts/check-tokens.mjs",
+          group: "g-scripts",
+          label: "check-tokens.mjs",
+          color: "#f0b429",
+          x: 240,
+          y: 20,
+          z: 180,
+        },
+        {
+          id: "scripts/smoke-test.mjs",
+          group: "g-scripts",
+          label: "smoke-test.mjs",
+          color: "#f0b429",
+          x: 320,
+          y: 24,
+          z: 150,
+        },
+        {
+          id: "scripts/build-pages.mjs",
+          group: "g-scripts",
+          label: "build-pages.mjs",
+          color: "#f0b429",
+          x: 200,
+          y: 18,
+          z: 210,
+        },
+      ];
+      const EDGES = [
+        ["app/main.js", "app/catalog.js"],
+        ["app/main.js", "app/state.js"],
+        ["app/main.js", "app/url.js"],
+        ["app/main.js", "app/search.js"],
+        ["app/main.js", "app/tree.js"],
+        ["app/main.js", "app/results.js"],
+        ["app/main.js", "app/facets.js"],
+        ["app/main.js", "app/featured.js"],
+        ["app/catalog.js", "data/prompts/index.js"],
+        ["app/catalog.js", "data/taxonomy.js"],
+        ["app/featured.js", "data/featured.js"],
+        ["app/results.js", "app/catalog.js"],
+        ["app/results.js", "app/search.js"],
+        ["app/search.js", "app/catalog.js"],
+        ["app/tree.js", "app/catalog.js"],
+        ["data/prompts/index.js", "data/prompts/coding.js"],
+        ["data/prompts/index.js", "data/prompts/writing.js"],
+        ["data/prompts/index.js", "data/prompts/security.js"],
+        ["data/prompts/index.js", "data/prompts/operations.js"],
+        ["index.html", "app/main.js"],
+        ["styles/tokens.css", "styles/base.css"],
+        ["styles/base.css", "styles/layout.css"],
+        ["styles/layout.css", "styles/tree.css"],
+        ["styles/tree.css", "styles/cards.css"],
+        ["styles/cards.css", "styles/controls.css"],
+        ["styles/controls.css", "styles/tokens.css"],
+        ["scripts/check-data.mjs", "scripts/check-tokens.mjs"],
+        ["scripts/check-tokens.mjs", "scripts/smoke-test.mjs"],
+        ["scripts/smoke-test.mjs", "scripts/build-pages.mjs"],
+        ["scripts/build-pages.mjs", "scripts/check-data.mjs"],
+      ];
+      const byId = new Map(BEADS.map((b) => [b.id, b]));
+      const YS = 6;
+
+      // Canvas 2D fallback for browsers with WebGL disabled
+      function renderFallback() {
+        container.dataset.renderer = "canvas2d";
+        container.innerHTML = "";
+        const W = container.clientWidth || 900;
+        const H = container.clientHeight || 560;
+        const dpr = window.devicePixelRatio || 1;
+        const canvas = document.createElement("canvas");
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + "px";
+        canvas.style.height = H + "px";
+        canvas.style.display = "block";
+        const ctx = canvas.getContext("2d");
+        ctx.scale(dpr, dpr);
+
+        const cx = W / 2;
+        const cy = H * 0.62;
+        const s = 0.95;
+        const proj = (x, y, z) => [cx + (x - z) * 0.62 * s, cy + (x + z) * 0.3 * s - y * 0.9 * s];
+
+        // cloth background
+        const bg = ctx.createLinearGradient(0, 0, 0, H);
+        bg.addColorStop(0, "#f4ecdb");
+        bg.addColorStop(1, "#d9cdb4");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        // base: side bands plus top face
+        const c = [
+          [-390, 250],
+          [390, 250],
+          [390, -250],
+          [-390, -250],
+        ].map(([x, z]) => proj(x, 0, z));
+        const top = c.map(([x, y]) => [x, y - 24]);
+        for (const [i, j] of [
+          [0, 1],
+          [1, 2],
+        ]) {
+          ctx.beginPath();
+          ctx.moveTo(top[i][0], top[i][1]);
+          ctx.lineTo(top[j][0], top[j][1]);
+          ctx.lineTo(c[j][0], c[j][1]);
+          ctx.lineTo(c[i][0], c[i][1]);
+          ctx.closePath();
+          ctx.fillStyle = "#8a6438";
+          ctx.fill();
+        }
+        ctx.beginPath();
+        top.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        ctx.closePath();
+        const wood = ctx.createLinearGradient(0, 0, W, H);
+        wood.addColorStop(0, "#e0bc8a");
+        wood.addColorStop(1, "#b9895a");
+        ctx.fillStyle = wood;
+        ctx.fill();
+        ctx.save();
+        ctx.clip();
+        ctx.strokeStyle = "rgba(120,80,40,0.05)";
+        for (let i = 0; i < 18; i++) {
+          const y = H * 0.3 + i * 18;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.bezierCurveTo(W * 0.3, y + 6, W * 0.7, y - 6, W, y + 3);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // wires
+        for (const [a, b] of EDGES) {
+          const p0 = byId.get(a);
+          const p1 = byId.get(b);
+          if (!p0 || !p1) continue;
+          const m = [(p0.x + p1.x) / 2, (p0.y + p1.y) / 2 + 40, (p0.z + p1.z) / 2];
+          const [x0, y0] = proj(p0.x, p0.y, p0.z);
+          const [xm, ym] = proj(m[0], m[1], m[2]);
+          const [x1, y1] = proj(p1.x, p1.y, p1.z);
+          ctx.beginPath();
+          ctx.moveTo(x0, y0);
+          ctx.quadraticCurveTo(xm, ym, x1, y1);
+          ctx.lineWidth = 10;
+          ctx.lineCap = "round";
+          ctx.strokeStyle = "rgba(0,0,0,0.25)";
+          ctx.stroke();
+          ctx.lineWidth = 7;
+          ctx.strokeStyle = p0.color || "#888";
+          ctx.stroke();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = "rgba(255,255,255,0.5)";
+          ctx.stroke();
+        }
+
+        // beads
+        let n = 0;
+        for (const b of BEADS) {
+          const [x, y] = proj(b.x, b.y + 15, b.z);
+          const r = 15;
+          const g = ctx.createRadialGradient(x - 5, y - 5, 2, x, y, r);
+          g.addColorStop(0, "#ffffff");
+          g.addColorStop(0.25, b.color);
+          g.addColorStop(1, "#000000");
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = b.color;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(x - 4, y - 5, r * 0.45, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(255,255,255,0.55)";
+          ctx.fill();
+          if (n % 3 === 1) {
+            ctx.beginPath();
+            ctx.arc(x, y, r * 0.35, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(0,0,0,0.35)";
+            ctx.fill();
+          }
+          n++;
+        }
+
+        container.appendChild(canvas);
+      }
+
+      const container = document.getElementById("scene");
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf7f4ee);
+      const camera = new THREE.PerspectiveCamera(
+        45,
+        container.clientWidth / container.clientHeight,
+        0.1,
+        2000,
+      );
+      const cam = (params.get("cam") || "360,720,1260").split(",").map(Number);
+      const look = (params.get("look") || "0,280,0").split(",").map(Number);
+      camera.position.set(cam[0], cam[1], cam[2]);
+      camera.lookAt(look[0], look[1], look[2]);
+      let renderer;
+      try {
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+      } catch (err) {
+        renderFallback();
+        throw err;
+      }
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      container.dataset.renderer = "webgl";
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.3;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.setClearColor(0xf3efe6);
+      container.appendChild(renderer.domElement);
+      const target = new THREE.Vector3(look[0], look[1], look[2]);
+      const radius = camera.position.distanceTo(target);
+      let theta = Math.atan2(camera.position.x - target.x, camera.position.z - target.z);
+      let phi = Math.acos((camera.position.y - target.y) / radius);
+      function applyOrbit() {
+        camera.position.set(
+          target.x + radius * Math.sin(phi) * Math.sin(theta),
+          target.y + radius * Math.cos(phi),
+          target.z + radius * Math.sin(phi) * Math.cos(theta),
+        );
+        camera.lookAt(target);
+      }
+      let dragging = false;
+      let lastX = 0;
+      let lastY = 0;
+      renderer.domElement.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        renderer.domElement.setPointerCapture(e.pointerId);
+      });
+      renderer.domElement.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        theta -= (e.clientX - lastX) * 0.006;
+        phi = Math.max(0.15, Math.min(Math.PI - 0.15, phi - (e.clientY - lastY) * 0.006));
+        lastX = e.clientX;
+        lastY = e.clientY;
+        applyOrbit();
+      });
+      renderer.domElement.addEventListener("pointerup", () => {
+        dragging = false;
+      });
+      const controls = { update() {} };
+
+      // soft studio environment for clearcoat reflections
+      const envCanvas = document.createElement("canvas");
+      envCanvas.width = 512;
+      envCanvas.height = 256;
+      const eg = envCanvas.getContext("2d");
+      const grad = eg.createLinearGradient(0, 0, 0, 256);
+      grad.addColorStop(0, "#fffdf7");
+      grad.addColorStop(0.55, "#efe6d4");
+      grad.addColorStop(1, "#bfae92");
+      eg.fillStyle = grad;
+      eg.fillRect(0, 0, 512, 256);
+      // softbox strips give the coated wires elongated studio highlights
+      for (const [x, y, w, h, a] of [
+        [40, 28, 190, 54, 0.95],
+        [300, 44, 150, 40, 0.8],
+        [190, 120, 120, 30, 0.45],
+      ]) {
+        const lg = eg.createLinearGradient(x, y, x + w, y + h);
+        lg.addColorStop(0, `rgba(255,255,255,${a})`);
+        lg.addColorStop(1, "rgba(255,255,255,0)");
+        eg.fillStyle = lg;
+        eg.beginPath();
+        eg.roundRect(x, y, w, h, 16);
+        eg.fill();
+      }
+      const envTex = new THREE.CanvasTexture(envCanvas);
+      envTex.mapping = THREE.EquirectangularReflectionMapping;
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      scene.environment = pmrem.fromEquirectangular(envTex).texture;
+      new THREE.TextureLoader().load("./vendor/studio.jpg", (tex) => {
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        scene.environment = pmrem.fromEquirectangular(tex).texture;
+      });
+      // fine surface roughness variation (paint/coating micro-texture)
+      function noiseTexture(size, lo, hi) {
+        const c = document.createElement("canvas");
+        c.width = c.height = size;
+        const g = c.getContext("2d");
+        const img = g.createImageData(size, size);
+        for (let i = 0; i < img.data.length; i += 4) {
+          const v = lo + Math.random() * (hi - lo);
+          img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+          img.data[i + 3] = 255;
+        }
+        g.putImageData(img, 0, 0);
+        const t = new THREE.CanvasTexture(c);
+        t.wrapS = t.wrapT = THREE.RepeatWrapping;
+        t.repeat.set(6, 6);
+        return t;
+      }
+      const roughTex = noiseTexture(128, 120, 210);
+      const microTex = noiseTexture(128, 90, 180);
+      function normalNoiseTexture(size) {
+        const c = document.createElement("canvas");
+        c.width = c.height = size;
+        const g = c.getContext("2d");
+        const img = g.createImageData(size, size);
+        for (let i = 0; i < img.data.length; i += 4) {
+          img.data[i] = 110 + Math.random() * 36;
+          img.data[i + 1] = 110 + Math.random() * 36;
+          img.data[i + 2] = 255;
+          img.data[i + 3] = 255;
+        }
+        g.putImageData(img, 0, 0);
+        const t = new THREE.CanvasTexture(c);
+        t.wrapS = t.wrapT = THREE.RepeatWrapping;
+        t.repeat.set(8, 8);
+        return t;
+      }
+      const microNormal = normalNoiseTexture(128);
+
+      // lights: soft, diffused indoor feel
+      scene.add(new THREE.HemisphereLight(0xfff6e8, 0xcbbfa6, 0.7));
+      scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+      const dir = new THREE.DirectionalLight(0xfff4e0, 0.9);
+      dir.position.set(260, 620, 220);
+      dir.castShadow = true;
+      dir.shadow.mapSize.set(2048, 2048);
+      dir.shadow.radius = 8;
+      dir.shadow.camera.left = -600;
+      dir.shadow.camera.right = 600;
+      dir.shadow.camera.top = 600;
+      dir.shadow.camera.bottom = -600;
+      dir.shadow.camera.near = 1;
+      dir.shadow.camera.far = 2000;
+      scene.add(dir);
+      const key = new THREE.PointLight(0xffffff, 300, 3000, 2);
+      key.position.set(180, 620, 420);
+      scene.add(key);
+      const fill = new THREE.DirectionalLight(0xdde8ff, 0.35);
+      fill.position.set(-300, 200, -200);
+      scene.add(fill);
+
+      // wood grain texture for the base
+      function woodTexture() {
+        const c = document.createElement("canvas");
+        c.width = 512;
+        c.height = 512;
+        const g = c.getContext("2d");
+        g.fillStyle = "#a9794a";
+        g.fillRect(0, 0, 512, 512);
+        for (let i = 0; i < 260; i++) {
+          g.strokeStyle = `rgba(${80 + Math.random() * 50},${45 + Math.random() * 35},${18 + Math.random() * 25},${0.25 + Math.random() * 0.35})`;
+          g.lineWidth = 2 + Math.random() * 6;
+          g.beginPath();
+          const y = Math.random() * 512;
+          g.moveTo(0, y);
+          g.bezierCurveTo(
+            170,
+            y + (Math.random() - 0.5) * 34,
+            340,
+            y + (Math.random() - 0.5) * 34,
+            512,
+            y,
+          );
+          g.stroke();
+        }
+        for (let i = 0; i < 7; i++) {
+          const x = Math.random() * 512;
+          const y = Math.random() * 512;
+          g.strokeStyle = "rgba(70,40,18,0.35)";
+          g.lineWidth = 2;
+          for (let k = 0; k < 4; k++) {
+            g.beginPath();
+            g.ellipse(x, y, 8 + k * 7, 4 + k * 4, Math.random(), 0, Math.PI * 2);
+            g.stroke();
+          }
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(0.008, 0.008);
+        return tex;
+      }
+
+      // cloth ground
+      function clothTexture() {
+        const c = document.createElement("canvas");
+        c.width = 256;
+        c.height = 256;
+        const g = c.getContext("2d");
+        g.fillStyle = "#e9dfc8";
+        g.fillRect(0, 0, 256, 256);
+        for (let i = 0; i < 4000; i++) {
+          g.fillStyle = `rgba(180,165,135,${Math.random() * 0.08})`;
+          g.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(140, 140);
+        return tex;
+      }
+
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(20000, 20000),
+        new THREE.MeshStandardMaterial({ color: 0xf3efe6, roughness: 1 }),
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -12;
+      ground.receiveShadow = true;
+
+      // soft grounding shadow under the base (seamless studio sweep)
+      const bsCanvas = document.createElement("canvas");
+      bsCanvas.width = 256;
+      bsCanvas.height = 256;
+      const bsg = bsCanvas.getContext("2d");
+      const bgrad = bsg.createRadialGradient(128, 128, 30, 128, 128, 126);
+      bgrad.addColorStop(0, "rgba(60,45,30,0.38)");
+      bgrad.addColorStop(0.6, "rgba(60,45,30,0.16)");
+      bgrad.addColorStop(1, "rgba(60,45,30,0)");
+      bsg.fillStyle = bgrad;
+      bsg.fillRect(0, 0, 256, 256);
+      const baseShadow = new THREE.Mesh(
+        new THREE.PlaneGeometry(1050, 760),
+        new THREE.MeshBasicMaterial({
+          map: new THREE.CanvasTexture(bsCanvas),
+          transparent: true,
+          depthWrite: false,
+        }),
+      );
+      baseShadow.rotation.x = -Math.PI / 2;
+      baseShadow.position.y = -11.7;
+      scene.add(baseShadow);
+
+      // base with rounded corners and beveled edges
+      function roundedBase(w, d, h, r) {
+        const s = new THREE.Shape();
+        const x = -w / 2;
+        const y = -d / 2;
+        s.moveTo(x + r, y);
+        s.lineTo(x + w - r, y);
+        s.quadraticCurveTo(x + w, y, x + w, y + r);
+        s.lineTo(x + w, y + d - r);
+        s.quadraticCurveTo(x + w, y + d, x + w - r, y + d);
+        s.lineTo(x + r, y + d);
+        s.quadraticCurveTo(x, y + d, x, y + d - r);
+        s.lineTo(x, y + r);
+        s.quadraticCurveTo(x, y, x + r, y);
+        const g = new THREE.ExtrudeGeometry(s, {
+          depth: h,
+          bevelEnabled: true,
+          bevelSize: 4,
+          bevelThickness: 4,
+          bevelSegments: 3,
+          curveSegments: 16,
+        });
+        g.center();
+        g.rotateX(-Math.PI / 2);
+        return g;
+      }
+      const woodTex = woodTexture();
+      const woodMat = new THREE.MeshStandardMaterial({
+        map: woodTex,
+        bumpMap: woodTex,
+        bumpScale: 0.8,
+        roughness: 0.62,
+      });
+      // layered ply edge: the strongest read of a real toy base
+      function plyTexture() {
+        const c = document.createElement("canvas");
+        c.width = 64;
+        c.height = 512;
+        const g = c.getContext("2d");
+        const bands = ["#e8cfa8", "#c79a68", "#f0dcbb", "#b88757", "#dcb98e", "#9c6f43"];
+        for (let y = 0; y < 512; y += 5) {
+          g.fillStyle = bands[(y / 5) % bands.length];
+          g.fillRect(0, y, 64, 5);
+        }
+        for (let i = 0; i < 40; i++) {
+          g.fillStyle = `rgba(90,60,30,${0.04 + Math.random() * 0.08})`;
+          g.fillRect(0, Math.random() * 512, 64, 1);
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(1, 6);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+      }
+      const plyMat = new THREE.MeshStandardMaterial({
+        map: plyTexture(),
+        roughness: 0.72,
+      });
+      function starBase(outer, inner, h) {
+        const s = new THREE.Shape();
+        for (let i = 0; i < 12; i++) {
+          const angle = Math.PI / 2 + (i * Math.PI) / 6;
+          const r = i % 2 === 0 ? outer : inner;
+          const x = Math.cos(angle) * r;
+          const y = Math.sin(angle) * r;
+          if (i === 0) s.moveTo(x, y);
+          else s.lineTo(x, y);
+        }
+        s.closePath();
+        const g = new THREE.ExtrudeGeometry(s, {
+          depth: h,
+          bevelEnabled: true,
+          bevelSize: 5,
+          bevelThickness: 5,
+          bevelSegments: 3,
+          curveSegments: 16,
+        });
+        g.center();
+        g.rotateX(-Math.PI / 2);
+        return g;
+      }
+      const base = new THREE.Mesh(starBase(430, 348, 26), [woodMat, plyMat]);
+      const texLoader = new THREE.TextureLoader();
+      const setupWoodTex = (t, srgb) => {
+        t.wrapS = t.wrapT = THREE.RepeatWrapping;
+        t.repeat.set(0.009, 0.009);
+        t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+        return t;
+      };
+      texLoader.load("./vendor/ash_veneer_diff_1k.jpg", (t) => {
+        woodMat.map = setupWoodTex(t, true);
+        woodMat.needsUpdate = true;
+      });
+      texLoader.load("./vendor/ash_veneer_nor_gl_1k.jpg", (t) => {
+        woodMat.normalMap = setupWoodTex(t, false);
+        woodMat.needsUpdate = true;
+      });
+      texLoader.load("./vendor/ash_veneer_rough_1k.jpg", (t) => {
+        woodMat.roughnessMap = setupWoodTex(t, false);
+        woodMat.needsUpdate = true;
+      });
+      base.receiveShadow = true;
+      base.castShadow = true;
+      scene.add(base);
+
+      // six painted anchor pads at the star lobes, as on the real toy
+      const padColors = [0xd94b3a, 0x7a4cc2, 0xe08a2e, 0x3fa34d, 0xf0b429, 0x2f6fd6];
+      for (let i = 0; i < 6; i++) {
+        const angle = Math.PI / 2 + (i * Math.PI) / 3;
+        const x = Math.cos(angle) * 390;
+        const z = -Math.sin(angle) * 390;
+        const pad = new THREE.Mesh(
+          new THREE.CylinderGeometry(40, 40, 7, 48),
+          new THREE.MeshPhysicalMaterial({
+            color: padColors[i],
+            roughness: 0.38,
+            clearcoat: 0.5,
+            clearcoatRoughness: 0.28,
+          }),
+        );
+        pad.position.set(x, 17, z);
+        pad.receiveShadow = true;
+        pad.castShadow = true;
+        scene.add(pad);
+        const grommet = new THREE.Mesh(
+          new THREE.CylinderGeometry(7, 7, 5, 24),
+          new THREE.MeshStandardMaterial({ color: 0x17130f, roughness: 0.5 }),
+        );
+        grommet.position.set(x, 22, z);
+        scene.add(grommet);
+      }
+
+      // stamped maker's mark on the base
+      const stampCanvas = document.createElement("canvas");
+      stampCanvas.width = 256;
+      stampCanvas.height = 128;
+      const sg = stampCanvas.getContext("2d");
+      sg.clearRect(0, 0, 256, 128);
+      sg.fillStyle = "rgba(35,30,24,0.75)";
+      sg.font = "bold 34px Georgia";
+      sg.fillText("PROMPT", 18, 48);
+      sg.font = "bold 26px Georgia";
+      sg.fillText("PACK  •  EST. 2026", 18, 88);
+      const stamp = new THREE.Mesh(
+        new THREE.PlaneGeometry(160, 80),
+        new THREE.MeshBasicMaterial({
+          map: new THREE.CanvasTexture(stampCanvas),
+          transparent: true,
+        }),
+      );
+      stamp.rotation.x = -Math.PI / 2;
+      stamp.position.set(240, 12.4, 150);
+      scene.add(stamp);
+
+      // soft contact shadow texture
+      const shadowCanvas = document.createElement("canvas");
+      shadowCanvas.width = 128;
+      shadowCanvas.height = 128;
+      const shg = shadowCanvas.getContext("2d");
+      const rg = shg.createRadialGradient(64, 64, 4, 64, 64, 62);
+      rg.addColorStop(0, "rgba(0,0,0,0.55)");
+      rg.addColorStop(0.55, "rgba(0,0,0,0.22)");
+      rg.addColorStop(1, "rgba(0,0,0,0)");
+      shg.fillStyle = rg;
+      shg.fillRect(0, 0, 128, 128);
+      const shadowTex = new THREE.CanvasTexture(shadowCanvas);
+      const shadowMat = new THREE.MeshBasicMaterial({
+        map: shadowTex,
+        transparent: true,
+        depthWrite: false,
+      });
+      function contactShadow(x, z, r) {
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(r * 2, r * 2), shadowMat);
+        m.rotation.x = -Math.PI / 2;
+        m.position.set(x, 12.6, z);
+        scene.add(m);
+      }
+
+      // wires
+      const DRAW_EDGES = false;
+      for (const [a, b] of DRAW_EDGES ? EDGES : []) {
+        const p0 = byId.get(a),
+          p1 = byId.get(b);
+        if (!p0 || !p1) continue;
+        const mx = (p0.x + p1.x) / 2,
+          my = ((p0.y + p1.y) / 2) * YS + 120,
+          mz = (p0.z + p1.z) / 2;
+        const pts = [];
+        const segs = 24;
+        for (let i = 0; i <= segs; i++) {
+          const t = i / segs;
+          const q = (t, p0v, pm, p1v) =>
+            (1 - t) * (1 - t) * p0v + 2 * (1 - t) * t * pm + t * t * p1v;
+          pts.push(
+            new THREE.Vector3(
+              q(t, p0.x, mx, p1.x),
+              q(t, p0.y * YS, my, p1.y * YS),
+              q(t, p0.z, mz, p1.z),
+            ),
+          );
+        }
+        const curve = new THREE.CatmullRomCurve3(pts);
+        const tube = new THREE.Mesh(
+          new THREE.TubeGeometry(curve, 64, 6, 16, false),
+          new THREE.MeshPhysicalMaterial({
+            roughness: 0.3,
+            metalness: 0.1,
+            clearcoat: 0.9,
+            clearcoatRoughness: 0.12,
+            envMapIntensity: 1.5,
+            normalMap: microNormal,
+            normalScale: new THREE.Vector2(0.15, 0.15),
+            color: new THREE.Color(p0.color || "#888"),
+          }),
+        );
+        tube.castShadow = true;
+        scene.add(tube);
+
+        // vertical anchors from the base up to the wire endpoints
+        for (const p of [p0, p1]) {
+          const h = p.y * YS - 12;
+          if (h <= 0) continue;
+          const post = new THREE.Mesh(
+            new THREE.CylinderGeometry(5, 5, h, 14),
+            new THREE.MeshPhysicalMaterial({
+              roughness: 0.3,
+              metalness: 0.1,
+              clearcoat: 0.9,
+              clearcoatRoughness: 0.12,
+              envMapIntensity: 1.5,
+              normalMap: microNormal,
+              normalScale: new THREE.Vector2(0.15, 0.15),
+              color: new THREE.Color(p.color || "#888"),
+            }),
+          );
+          post.position.set(p.x, 12 + h / 2, p.z);
+          post.castShadow = true;
+          scene.add(post);
+        }
+
+        // black grommet where the wire enters the base
+        const grommet = new THREE.Mesh(
+          new THREE.CylinderGeometry(11, 11, 6, 20),
+          new THREE.MeshStandardMaterial({ color: 0x1b1b1b, roughness: 0.5 }),
+        );
+        grommet.position.set(p0.x, 13, p0.z);
+        grommet.castShadow = true;
+        scene.add(grommet);
+        const grommet2 = grommet.clone();
+        grommet2.position.set(p1.x, 13, p1.z);
+        scene.add(grommet2);
+      }
+
+      // signature red conical spiral, echoing a classic bead maze
+      const spiralPts = [];
+      for (let i = 0; i <= 140; i++) {
+        const t = i / 140;
+        const ang = t * Math.PI * 6;
+        const r = 150 * (1 - t * 0.78);
+        spiralPts.push(
+          new THREE.Vector3(Math.cos(ang) * r - 120, 20 + t * 520, Math.sin(ang) * r + 40),
+        );
+      }
+      const spiralStart = spiralPts[0];
+      for (let i = 1; i <= 10; i++) {
+        const t = i / 10;
+        spiralPts.unshift(
+          new THREE.Vector3(spiralStart.x, 6 + (spiralStart.y - 6) * t, spiralStart.z),
+        );
+      }
+      const spiralEnd = spiralPts[spiralPts.length - 1];
+      for (let i = 1; i <= 16; i++) {
+        const t = i / 16;
+        spiralPts.push(new THREE.Vector3(spiralEnd.x, spiralEnd.y * (1 - t) + 6 * t, spiralEnd.z));
+      }
+      const spiralCurve = new THREE.CatmullRomCurve3(spiralPts);
+      const spiral = new THREE.Mesh(
+        new THREE.TubeGeometry(spiralCurve, 220, 6, 16, false),
+        new THREE.MeshPhysicalMaterial({
+          roughness: 0.3,
+          metalness: 0.1,
+          clearcoat: 0.9,
+          clearcoatRoughness: 0.12,
+          envMapIntensity: 1.5,
+          normalMap: microNormal,
+          normalScale: new THREE.Vector2(0.15, 0.15),
+          color: 0xe24a3b,
+        }),
+      );
+      spiral.castShadow = true;
+      scene.add(spiral);
+      const spiralGrommet = new THREE.Mesh(
+        new THREE.CylinderGeometry(11, 11, 6, 20),
+        new THREE.MeshStandardMaterial({ color: 0x1b1b1b, roughness: 0.5 }),
+      );
+      spiralGrommet.position.set(spiralEnd.x, 13, spiralEnd.z);
+      scene.add(spiralGrommet);
+      const spiralGrommetStart = spiralGrommet.clone();
+      spiralGrommetStart.position.set(spiralStart.x, 13, spiralStart.z);
+      scene.add(spiralGrommetStart);
+
+      // one blue wire with twin arches, anchored at both ends
+      const bluePts = [];
+      for (let i = 0; i <= 100; i++) {
+        const t = i / 100;
+        bluePts.push(
+          new THREE.Vector3(
+            -300 + 600 * t,
+            20 + Math.abs(Math.sin(t * Math.PI * 2)) * 440,
+            -80 + Math.sin(t * Math.PI) * 120,
+          ),
+        );
+      }
+      for (let i = 1; i <= 8; i++) {
+        const t = i / 8;
+        bluePts.unshift(new THREE.Vector3(-300, 6 + (bluePts[0].y - 6) * t, -80));
+        bluePts.push(new THREE.Vector3(300, 6 + (bluePts[bluePts.length - 1].y - 6) * t, -80));
+      }
+      const blueCurve = new THREE.CatmullRomCurve3(bluePts);
+      const blueWire = new THREE.Mesh(
+        new THREE.TubeGeometry(blueCurve, 260, 6, 16, false),
+        new THREE.MeshPhysicalMaterial({
+          color: 0x2f6fd6,
+          roughness: 0.3,
+          metalness: 0.1,
+          clearcoat: 0.9,
+          clearcoatRoughness: 0.12,
+          envMapIntensity: 1.5,
+          normalMap: microNormal,
+          normalScale: new THREE.Vector2(0.15, 0.15),
+        }),
+      );
+      blueWire.castShadow = true;
+      scene.add(blueWire);
+
+      // one low green S-wire, anchored at both ends
+      const greenPts = [];
+      for (let i = 0; i <= 100; i++) {
+        const t = i / 100;
+        greenPts.push(
+          new THREE.Vector3(
+            -280 + 560 * t,
+            30 + 120 * Math.sin(t * Math.PI) + 36 * Math.sin(t * Math.PI * 4),
+            -170 + 90 * Math.sin(t * Math.PI * 2),
+          ),
+        );
+      }
+      for (let i = 1; i <= 8; i++) {
+        const t = i / 8;
+        greenPts.unshift(new THREE.Vector3(-280, 6 + (greenPts[0].y - 6) * t, -170));
+        greenPts.push(new THREE.Vector3(280, 6 + (greenPts[greenPts.length - 1].y - 6) * t, -170));
+      }
+      const greenCurve = new THREE.CatmullRomCurve3(greenPts);
+      const greenWire = new THREE.Mesh(
+        new THREE.TubeGeometry(greenCurve, 220, 6, 16, false),
+        new THREE.MeshPhysicalMaterial({
+          color: 0x3fa34d,
+          roughness: 0.3,
+          metalness: 0.1,
+          clearcoat: 0.9,
+          clearcoatRoughness: 0.12,
+          envMapIntensity: 1.5,
+          normalMap: microNormal,
+          normalScale: new THREE.Vector2(0.15, 0.15),
+        }),
+      );
+      greenWire.castShadow = true;
+      scene.add(greenWire);
+
+      for (const [x, z] of [
+        [-300, -80],
+        [300, -80],
+        [-280, -170],
+        [280, -170],
+      ]) {
+        const grommet = new THREE.Mesh(
+          new THREE.CylinderGeometry(10, 10, 6, 20),
+          new THREE.MeshStandardMaterial({ color: 0x1b1b1b, roughness: 0.5 }),
+        );
+        grommet.position.set(x, 13, z);
+        scene.add(grommet);
+      }
+
+      // beads with a real through-bore so the wire visibly threads them
+      function boreBead(profile) {
+        const pts = profile.map(([r, y]) => new THREE.Vector2(r, y));
+        return new THREE.LatheGeometry(pts, 32);
+      }
+      const sphereBeadGeo = boreBead([
+        [6, 15],
+        [12, 12],
+        [15, 6],
+        [15, -6],
+        [12, -12],
+        [6, -15],
+      ]);
+      const cylinderBeadGeo = boreBead([
+        [6, 12],
+        [15, 12],
+        [15, -12],
+        [6, -12],
+      ]);
+
+      // graph beads (hidden in classic mode)
+      const DRAW_GRAPH_BEADS = false;
+      if (DRAW_GRAPH_BEADS) {
+        let beadIndex = 0;
+        for (const b of BEADS) {
+          const color = new THREE.Color(b.color);
+          const material = new THREE.MeshPhysicalMaterial({
+            roughness: 0.3,
+            metalness: 0.1,
+            clearcoat: 0.9,
+            clearcoatRoughness: 0.12,
+            envMapIntensity: 1.5,
+            normalMap: microNormal,
+            normalScale: new THREE.Vector2(0.15, 0.15),
+            color,
+          });
+          const kind = beadIndex % 5 === 0 ? "cylinder" : beadIndex % 3 === 1 ? "ring" : "sphere";
+          let geometry;
+          if (kind === "ring") geometry = new THREE.TorusGeometry(12, 6, 20, 36);
+          else if (kind === "cylinder") geometry = cylinderBeadGeo;
+          else geometry = sphereBeadGeo;
+          const mesh = new THREE.Mesh(geometry, material);
+          const dir = new THREE.Vector3();
+          for (const [a, bb] of EDGES) {
+            if (a === b.id) {
+              const other = byId.get(bb);
+              if (other)
+                dir.add(new THREE.Vector3(other.x - b.x, (other.y - b.y) * YS, other.z - b.z));
+            } else if (bb === b.id) {
+              const other = byId.get(a);
+              if (other)
+                dir.add(new THREE.Vector3(other.x - b.x, (other.y - b.y) * YS, other.z - b.z));
+            }
+          }
+          if (dir.lengthSq() > 0) {
+            dir.normalize();
+            const axis = kind === "ring" ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 1, 0);
+            mesh.quaternion.setFromUnitVectors(axis, dir);
+          }
+          mesh.position.set(b.x, b.y * YS + (kind === "ring" ? 16 : 15), b.z);
+          mesh.castShadow = true;
+          scene.add(mesh);
+          contactShadow(b.x, b.z, kind === "ring" ? 20 : 18);
+          beadIndex++;
+        }
+      }
+
+      // classic 18-bead arrangement on three wires
+      const beadPalette = [0xe24a3b, 0xf0b429, 0x3fa34d, 0x2f6fd6, 0x7a4cc2, 0xc9905a];
+      const classicBeads = [];
+      let classicIndex = 0;
+      for (const curve of [spiralCurve, blueCurve, greenCurve]) {
+        for (let i = 0; i < 6; i++) {
+          const t = 0.1 + 0.8 * (i / 5);
+          const pos = curve.getPointAt(t);
+          const tan = curve.getTangentAt(t).normalize();
+          const kind =
+            classicIndex % 5 === 0 ? "cylinder" : classicIndex % 3 === 1 ? "ring" : "sphere";
+          const geometry =
+            kind === "ring"
+              ? new THREE.TorusGeometry(16, 5, 20, 36)
+              : kind === "cylinder"
+                ? cylinderBeadGeo
+                : sphereBeadGeo;
+          const bead = new THREE.Mesh(
+            geometry,
+            new THREE.MeshPhysicalMaterial({
+              color: beadPalette[classicIndex % beadPalette.length],
+              roughness: 0.42,
+              metalness: 0.05,
+              clearcoat: 0.5,
+              clearcoatRoughness: 0.3,
+              envMapIntensity: 1.2,
+              normalMap: microNormal,
+              normalScale: new THREE.Vector2(0.12, 0.12),
+            }),
+          );
+          bead.position.copy(pos);
+          const axis = kind === "ring" ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 1, 0);
+          bead.quaternion.setFromUnitVectors(axis, tan);
+          bead.castShadow = true;
+          bead.userData.beadId = BEADS[classicIndex]?.id;
+          scene.add(bead);
+          classicBeads.push(bead);
+          contactShadow(pos.x, pos.z, 16);
+          classicIndex++;
+        }
+      }
+
+      const detailMeta = document.getElementById("detail-meta");
+      const detailBody = document.getElementById("detail-body");
+      function showBead(id) {
+        const bead = BEADS.find((b) => b.id === id);
+        if (!bead) return;
+        const group = GROUPS.find((g) => g.id === bead.group);
+        detailMeta.textContent = bead.id;
+        detailBody.textContent = group ? `Group: ${group.label}` : "";
+      }
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      renderer.domElement.addEventListener("click", (event) => {
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        const hit = raycaster.intersectObjects(classicBeads, false)[0];
+        if (hit) showBead(hit.object.userData.beadId);
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+    </script>
+    <script src="./bead-fallback.js"></script>
+  </body>
+</html>

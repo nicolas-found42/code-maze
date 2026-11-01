@@ -1,0 +1,35 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
+import os from "node:os";
+import { once } from "node:events";
+import { createApp } from "../scripts/server.mjs";
+
+test("local API scans chosen repos, reports errors, and only serves the app", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "code-maze-api-"));
+  await mkdir(path.join(root, "other"));
+  await writeFile(path.join(root, "first.js"), "import './other/second.js';");
+  await writeFile(path.join(root, "other/second.js"), "");
+  const app = createApp({ repository: root });
+  app.listen(0, "127.0.0.1");
+  await once(app, "listening");
+  t.after(async () => { app.closeAllConnections(); await new Promise((resolve) => app.close(resolve)); await rm(root, { recursive: true, force: true }); });
+  const base = `http://127.0.0.1:${app.address().port}`;
+  const initial = await fetch(`${base}/api/scan`).then((response) => response.json());
+  assert.equal(initial.nodes.length, 2);
+  assert.equal(initial.edges.length, 1);
+  const post = (body, headers = {}) => fetch(`${base}/api/scan`, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) });
+  const other = await post({ path: path.join(root, "other") }).then((response) => response.json());
+  assert.deepEqual(other.nodes.map((node) => node.id), ["second.js"]);
+  const bad = await post({ path: path.join(root, "missing") });
+  assert.equal(bad.status, 400);
+  assert.ok((await bad.json()).error);
+  assert.equal((await post(null)).status, 400);
+  assert.equal((await post({ path: root }, { Origin: "https://other.example" })).status, 403);
+  assert.equal((await fetch(`${base}/package.json`)).status, 404);
+  assert.equal((await fetch(`${base}/docs/../scripts/server.mjs`)).status, 404);
+  const html = await fetch(`${base}/docs/codebase-bead-maze.html`);
+  assert.equal(html.status, 200);
+  assert.match(await html.text(), /Local repository path/);
+});

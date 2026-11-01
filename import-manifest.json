@@ -1,0 +1,1688 @@
+{
+  "source": "/Users/nicolas/Documents/github/prompt-pack",
+  "copied_on": "2026-11-01",
+  "selection": "All file paths containing bead or maze, all files mentioning bead maze or bead-fallback, vendor dependencies, and LICENSE. Includes ignored and hidden files except Git internals, node_modules, Python caches, and .DS_Store.",
+  "files": [
+    {
+      "path": "LICENSE",
+      "sha256": "2984fc97c6d7ce182c80c14731fb446de878ed5f65db3360c054c79085287a6b",
+      "bytes": 1074,
+      "reasons": [
+        "source license"
+      ]
+    },
+    {
+      "path": "_site/docs/bead-fallback.js",
+      "sha256": "03f449316abc38e30a52ca9d8a8ee4fcf701485ba3b6d46944e48ed8f2277eb4",
+      "bytes": 4222,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "_site/docs/bead-maze-photo3d.html",
+      "sha256": "f03e90199a62551f8219fab35a88237127973cf4fc14a9db87673cce0fd62039",
+      "bytes": 9001,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "_site/docs/bead-maze-render-final.png",
+      "sha256": "dff7db61e02fdaea84d5fb1a87fd1732a5a45529576197bc514122f81ce4ae2e",
+      "bytes": 3244082,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "_site/docs/bead-maze-view-front-backdrop.jpg",
+      "sha256": "e08038b98770fe4546457dd42fbb48b95cb168fe0e08f72e77a417eab778969f",
+      "bytes": 45497,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "_site/docs/bead-maze-view-front-depth.png",
+      "sha256": "cfb55a2735c7b806d9ebb5c20a801238e1870caa1a6436900cd358ff576db687",
+      "bytes": 191946,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "_site/docs/bead-maze-view-front.png",
+      "sha256": "7b484620fac9a72e4b055b4e9a526bb66d902c4c8166acc83b36aa28ace0b784",
+      "bytes": 1226084,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "_site/docs/bead-maze-view-threequarter-backdrop.jpg",
+      "sha256": "f1229f769c825bd5b7c45083639ed05f9e4959cf6871b1ac62105770a0e76a4f",
+      "bytes": 69628,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "_site/docs/bead-maze-view-threequarter-depth.png",
+      "sha256": "83c7c727a78bd752999115a737a40e228b52bfb107ed50eeeada9f432346aa3d",
+      "bytes": 202932,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "_site/docs/bead-maze-view-threequarter.png",
+      "sha256": "2488a3d289c1185ac829bed79f9a23b838fcc1482252e1f42695a07ef6ac3580",
+      "bytes": 1178007,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "_site/docs/bead-maze-view-top-backdrop.jpg",
+      "sha256": "87f3d8af9b2fab3e145ed620356610a8dc0796a957226ea196cf506e05448e84",
+      "bytes": 71923,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "_site/docs/bead-maze-view-top-depth.png",
+      "sha256": "c4821d55ffd748ef384bf7e416e78af57b4a793a6c336d815d21e9b651756fe2",
+      "bytes": 226470,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "_site/docs/bead-maze-view-top.png",
+      "sha256": "6c332030753e2036dee21daf1a2bc4504d13ef5dc8e501663908ca48e0016040",
+      "bytes": 1499221,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "_site/docs/codebase-bead-maze.html",
+      "sha256": "0d1984b8ce849511eb25544b2e6d76c85ddbf1de5e1ce88946ca452341d7d3ea",
+      "bytes": 43014,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/OrbitControls.js",
+      "sha256": "3ddc520827c42be9a8f15f4dde5b15eff60690335edf1f98348ece19c90fc086",
+      "bytes": 32077,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/ash_veneer_diff_1k.jpg",
+      "sha256": "13fd87c8b0a5cc1d4e408fb75b3eb629417ea6b1aaf1672b5adf993640486673",
+      "bytes": 592273,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/ash_veneer_nor_gl_1k.jpg",
+      "sha256": "824898e187fb1d701b36a898ecd736a0464f49fa46233a35592e1ed9348e7fc4",
+      "bytes": 397524,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/ash_veneer_rough_1k.jpg",
+      "sha256": "0857c5e1db0c265d1d04c9451041f55b78cc7613d44caf42c7c9cd449e72d835",
+      "bytes": 797439,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/fine_grained_wood_col_1k.jpg",
+      "sha256": "d171f45ef01bc6e239b00dfaa4961bcd27f7d8e93e3962da3bd3d0ce703d802c",
+      "bytes": 336305,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/fine_grained_wood_nor_gl_1k.jpg",
+      "sha256": "ba95eadc009818e161d0f753191f1bacc3fc861e593be0bc6d82b437f9ec8044",
+      "bytes": 193626,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/fine_grained_wood_rough_1k.jpg",
+      "sha256": "f281f682e62fe322303dfeaa13dac18b5cb9e113617fe0aca43605b49161d82b",
+      "bytes": 215155,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/fingerprints_rough.jpg",
+      "sha256": "fbb97cbebe0fdf6c9cbe1931687eb681ebcfb87441a3870b2761f3f6fcfdc3e5",
+      "bytes": 373460,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/oak_veneer_01_diff_1k.jpg",
+      "sha256": "c14681f72f59f17bff568cae7a837641443b607b899f0c279cd64a5638f877a7",
+      "bytes": 641756,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/oak_veneer_01_nor_gl_1k.jpg",
+      "sha256": "1297acf7b4476d5ccd83cc8b27be96aa6110f7a9c3a40be0bd767bf81b17db01",
+      "bytes": 484844,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/oak_veneer_01_rough_1k.jpg",
+      "sha256": "ca2af5649b628ef05f196793d68cdca874c12ceb6e9ae566976546d9dd5a2604",
+      "bytes": 865194,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/scratches_color.jpg",
+      "sha256": "349196461cf0435481c87513f8162f998562e071acf72bc656f62ac1e0d70459",
+      "bytes": 570509,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/scratches_normal.jpg",
+      "sha256": "fb2d08afac5375f0f93dcd4e52015b54b54a32c66a672f5922539218692450c4",
+      "bytes": 1800637,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/studio.hdr",
+      "sha256": "30933d55e45f0795daf49f3cbefbe0e5ebcb821ee04fb0a2818c02ffc3938817",
+      "bytes": 1686299,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/studio.jpg",
+      "sha256": "622f2be0cd00fb5df0c0336a9a1322db75a4a6f071e068bb6175d50dd2bd2194",
+      "bytes": 43557,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/three.min.js",
+      "sha256": "170c6789f43217c96b3170f4b42fafe135de7f7cd48497a4218f9757ee1d49fa",
+      "bytes": 669884,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/three.module.js",
+      "sha256": "d3f012bd10f68664457ec291bc2524b85ef2a06b45554b0ab04a06e8836d1f5d",
+      "bytes": 1335743,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/white_maple_veneer_diff_1k.jpg",
+      "sha256": "0cdcb6d726ca7e6039ab0eeb2b1828a0ef188b43c2370972cf6eebeaff76aaa0",
+      "bytes": 443279,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/white_maple_veneer_nor_gl_1k.jpg",
+      "sha256": "fb63ac49ab9a8f1e650a7886e570bfb46a1970d73b9a943c29015f3f111078fc",
+      "bytes": 275968,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/white_maple_veneer_rough_1k.jpg",
+      "sha256": "6bacc0bae40c52759e91d77555baad27f9e8cb2bec471d755726262539e6df02",
+      "bytes": 721797,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/wood_table_001_diff_1k.jpg",
+      "sha256": "460dd08d240f4a1f02982415048c3c5c200f385db212da18dc7e2df68bf4d0be",
+      "bytes": 215573,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/wood_table_001_nor_gl_1k.jpg",
+      "sha256": "9bf7ddf5721e225c20290f1772ae37f9bdfd49658f6d458259eb794e2149d3cf",
+      "bytes": 51927,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "_site/docs/vendor/wood_table_001_rough_1k.jpg",
+      "sha256": "a2ca9ae89dfe7b8e2e5e92f0aa43467845417de8a50205b5852ef0d57c7624f9",
+      "bytes": 237261,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/bead-fallback.js",
+      "sha256": "03f449316abc38e30a52ca9d8a8ee4fcf701485ba3b6d46944e48ed8f2277eb4",
+      "bytes": 4222,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/captures/contact-sheet.jpg",
+      "sha256": "c5b6cef3468199013d2a68118860aa11bb6d672d58521d3a63467413e047b64c",
+      "bytes": 285074,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/captures/hero-z0.8.png",
+      "sha256": "6ffa6544668e0f0bbb77b6d7e85b636b2b2cfae3deebf153e0e923aa79d418e4",
+      "bytes": 490640,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/captures/hero-z1.4.png",
+      "sha256": "a15217954ab8a7ea228813709a8b863efdf8b698f21ce3fabb00ed9055dcec24",
+      "bytes": 1040637,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/captures/hero-z1.png",
+      "sha256": "6af9344a1cfbfe660808510e35869aea4b4995ed122aad2915e2914f58b4676c",
+      "bytes": 697303,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/captures/low-z0.8.png",
+      "sha256": "5f8b8baf0015d711ec1fd4a208bd21cc3dd17ae853ab621fa6e1bcdd6685a229",
+      "bytes": 383427,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/captures/low-z1.4.png",
+      "sha256": "64a800a63fd89dd651cd101bc1d5287320e8ce46ec241af2715ea27e1f5bc75a",
+      "bytes": 697777,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/captures/low-z1.png",
+      "sha256": "a822b8dc78bb853f65b69fbbd09dd66a51f248371bb66f6a3296d1515bc55962",
+      "bytes": 539734,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/captures/side-z0.8.png",
+      "sha256": "20ed8989aa9d32c742db5fa4ec822617e801f89ead31360634d014667f717634",
+      "bytes": 377722,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/captures/side-z1.4.png",
+      "sha256": "96f4aaf86bc8c82172cb21869baf7da10e705caf835c763e491ac8bbba5f71f5",
+      "bytes": 701408,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/captures/side-z1.png",
+      "sha256": "6eb5b2a38d01acfdaa5d3aeec33de6fbb60d5df6b82620f9b2b762a0517de383",
+      "bytes": 535935,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/captures/triposr-attempt.jpg",
+      "sha256": "49c17c8e4db61a3892a0eb1824d9799739862566a1a7f5b284369194abafd4da",
+      "bytes": 100891,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/contact-sheets/sheet-1.jpg",
+      "sha256": "7ebe437b02fe49df2f92e6a9c030923dce9ad69c523971323ecc376af728c05d",
+      "bytes": 292985,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/contact-sheets/sheet-2.jpg",
+      "sha256": "094409601a8dce1817a9ee5a3338950dc389ab9e72d0af13a56080d5e46dbd63",
+      "bytes": 262864,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/contact-sheets/sheet-3.jpg",
+      "sha256": "d838d76e416f58aac1e20c5b1c1eb7b66d99606f9f69fe3bdc6abfbaa468f6ea",
+      "bytes": 281746,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/contact-sheets/sheet-4.jpg",
+      "sha256": "0f0c4641c21e2a7fcaa1de27d9b99aeb2d1af9dd71ac980344f0d834198ce839",
+      "bytes": 288013,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/contact-sheets/sheet-5.jpg",
+      "sha256": "311a05623cf005abc8c830c1a658791159c3d4d6ad47a3e9c5d93a80abd53b40",
+      "bytes": 304707,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/0880417454f4.png",
+      "sha256": "a4fe596d5cbaca3574753fa5b8b0cc3d5a28cc2e4662c20112b2c9e101a76f4d",
+      "bytes": 237091,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/0db39ea7ff50.jpg",
+      "sha256": "5db64e5eff5ed8811b31374649b8c2dc339af2dd92edde2522198aa9794f4a5b",
+      "bytes": 16361,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/133a80235776.jpg",
+      "sha256": "f16b22127b5d0ed53d95313558f34de041d04d6d8fc2046d44073a9b8381b0c2",
+      "bytes": 20487,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/147b9f1ef563.jpg",
+      "sha256": "55c42ca7e24541218b85a806c8ed35417231cf195e15df4b5eb534a3c71509b0",
+      "bytes": 130623,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/1814c601a572.jpg",
+      "sha256": "69205681137045d7865c66a5e52eb4c147c108a8675d84d19d6654330a86db54",
+      "bytes": 50932,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/19a8f3a80d89.jpg",
+      "sha256": "5c70472dc3e4326bbf1a1f46389f0dbfca2b60a15d677f4c15babf9c96c8e6f0",
+      "bytes": 55737,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/1c7d78eb5f87.jpg",
+      "sha256": "c683369f25c2e0865891ace65e89612a4540de5fa294142958c10b079bbca987",
+      "bytes": 25796,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/1d5a39f1db86.png",
+      "sha256": "d922fe1265b20b5554e7c11024a8dbcc028f5dc393df034b50ff961fc2f15283",
+      "bytes": 169619,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/1d90db459cb1.jpg",
+      "sha256": "66aa56bdf018713e59cc50bebab3c65555f94ef69219f402aa2c11a3bae8c5a2",
+      "bytes": 19567,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/1e9594af5870.jpg",
+      "sha256": "174b07934344103ac2697d8e7a43be3c7c58d2b4cfded724014cfafe8c0d14ff",
+      "bytes": 150211,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/22d49509c427.jpg",
+      "sha256": "3064bb078b20a591e97b1431405473cbadf1aaa2777379e2c7a36c114e6da101",
+      "bytes": 22349,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/24dcaafb68a6.jpg",
+      "sha256": "6f3292c22a45bd4e28cb4364e6c811506e22aba400bfcf5cf2ab0c09ea7b0ce6",
+      "bytes": 178955,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/2654f43153d1.jpg",
+      "sha256": "042b9ad6ff07ebb98dda68006d5c7b3a7caa9c4db025213c9287ac23c99c976c",
+      "bytes": 72302,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/27cc57eac1f6.jpg",
+      "sha256": "4d00153a559960b25bc7e78470d47933dd5194390797f15d5b4f6cf1bf7a4c2b",
+      "bytes": 207532,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/283c64077d05.jpg",
+      "sha256": "4cc1661d652bc50761e5603572e58a1970401577730120f4f8bfd3185db25ee5",
+      "bytes": 29118,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/2fbb5689a9c8.jpg",
+      "sha256": "04fec99df69ef8d235c6bbb405daa1287897d7044c9bab0376ecf5dc7ae02367",
+      "bytes": 74570,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/31e5a47388c1.jpg",
+      "sha256": "015802327267a12571391f22f802c8c2cc5d8e40206c0226ee2b2f6299515121",
+      "bytes": 861077,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/33cdd320fefc.jpg",
+      "sha256": "2cb6c4f1cd31958e9aa4a76d7e8122b80cb35a059e5e343a636acc89318b0b16",
+      "bytes": 25669,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/35a40bb9acc2.jpg",
+      "sha256": "3639f895dd948de07902b2c1c64d25913ed0a072f5b9bddeffb4caf3e5593b63",
+      "bytes": 118663,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/370956ad9858.webp",
+      "sha256": "6bc3a068229426c8edbb689a16ae39dcccf5c403efb97097e2e0d2709186f602",
+      "bytes": 42702,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/38488b583b06.jpg",
+      "sha256": "6215499d2bd8c4b0ba48dcaaaf5a42fcbd783f2c417c2879fbae7c29998a1b04",
+      "bytes": 656998,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/3ba99fc82fdd.jpg",
+      "sha256": "ace03668c852db2287f93a9f99e4867ad6733fba1015a591a631c95a9815f1dd",
+      "bytes": 32888,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/423dce5cf394.jpg",
+      "sha256": "b0ee5005ae5d8738437290d058b9c58e1b2f567d2dc0e5ccbb76a2c29d1bb7e2",
+      "bytes": 534724,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/42f8e8587078.jpg",
+      "sha256": "5a021a5491a49adfdb216a570f1bd6ff45eb9ff01086b5814ead2002036b207b",
+      "bytes": 15760,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/45965d3da9c3.jpg",
+      "sha256": "a0608f8c1b8982f393d853babeaf97a7becf374f29163dedd74e19150654f9f1",
+      "bytes": 13203,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/4637b5c68af6.jpg",
+      "sha256": "b5748887c753c0594dd15818ee0e7e84ae72c7b3f6029a13569f023679da6ea9",
+      "bytes": 66278,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/46f33bed3d73.jpg",
+      "sha256": "8b04d5570492c5a2e5d5cfb622558af8cd415d41bdfb3ff907500fa999e93662",
+      "bytes": 17137,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/48956e5e6cad.jpg",
+      "sha256": "7046096c2b25f183aac1934dfb8c0fb006329ee35387abe6b5a5a7f0345ceaad",
+      "bytes": 330990,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/55cf3c430bfb.jpg",
+      "sha256": "348c552aa13ef24795b7e3400b9e16a27462390d113adaf489b2cd0cd1bde917",
+      "bytes": 371522,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/55e7fe874eb1.jpg",
+      "sha256": "401f694443d62478e2c38b567d2f999f509947667ff3a18db5a7929724d55d95",
+      "bytes": 47029,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/56f9107549fa.png",
+      "sha256": "2e49da89b69d305afce15c379c66e6c0e6524e2e7c53422439fdabec5079f4cc",
+      "bytes": 1570199,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/57c613697aed.jpg",
+      "sha256": "2ff578ddb89908fc2ef6c8fdb6f93a313f2ba13cfeff52930f5c5c86d98c5c38",
+      "bytes": 15077,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/5978f2f051bf.jpg",
+      "sha256": "e6e02d0bd94decf7ebd390b29d7d93dd6ed864a7c6558dcb8dcd05e459612444",
+      "bytes": 202086,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/5de4a5199ffc.jpg",
+      "sha256": "ca666ef76b40ff0bdbc2ec38804cb807434e7189727b57f57082aec69b05ef7b",
+      "bytes": 338036,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/60d31b89abc7.webp",
+      "sha256": "815ec2143b007a7c90ff0706ecfa95c5a4bc6e88d9704cbbada7f5d8058cebb7",
+      "bytes": 92446,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/62a1ab33d022.jpg",
+      "sha256": "4c13b943af6d0d1092489d3d9a0e840eba2c28f0dd98ef4afda599534b0dc513",
+      "bytes": 64523,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/634d5cb88203.webp",
+      "sha256": "55bdfdceeebe84b49e5195131be44c273c216a5c3c53fcd0cfb5964f28c5a6bb",
+      "bytes": 14446,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/6457a88543d6.jpg",
+      "sha256": "b76ada548f50649af8b630759ef2161ca1b2eded5e84db0d2c13c544f28019f4",
+      "bytes": 19917,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/6ae213d3c44e.jpg",
+      "sha256": "343e6932b28234d31b0634aa789882db75af561147eae149bd2306db7752708f",
+      "bytes": 15986,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/72d49e44b8cd.jpg",
+      "sha256": "1cbb1c15721e992c47ec91a3daee7883305d851b14acc375428c5bc9d1aa7601",
+      "bytes": 362392,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/740b94fc6c7d.jpg",
+      "sha256": "34a47a0a548d363bdd790c18b14049a2ab0eb4c3e0734b0c26306bc9897c0857",
+      "bytes": 57620,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/77531f66316f.jpg",
+      "sha256": "cdecf7d58c21dccf30acc8a29c85c22ec062b0af5f8944e1df1d557ed43ed8f8",
+      "bytes": 29937,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/786e7607c49c.jpg",
+      "sha256": "b84fcc8c6cb13b1b73ba21d0e62e96814f162d20cb24c81981a5a0c5f3ead35d",
+      "bytes": 111213,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/7b58c5936b56.jpg",
+      "sha256": "12b717b79d8cae148cfa8600f62deeac82c3b0a2c62e1f5adf806c370448d824",
+      "bytes": 29379,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/7d0805fe9d27.jpg",
+      "sha256": "9b88ed96b4acbdc7acc3094aa0720df893fe38f3c7ee7ce7a4e8af14a2adff78",
+      "bytes": 157834,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/7f8d5f46415b.jpg",
+      "sha256": "ca1bb5922943691b242b3e886da5dd858c9e57ed7fae9e5dc93927b6807655d5",
+      "bytes": 134027,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/81922cbe5ff4.jpg",
+      "sha256": "59732111902ae4e38153398ec8c55b62cbf1c86ae01680c73ea3ecddec2824fd",
+      "bytes": 22863,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/83b704f86567.webp",
+      "sha256": "6eb3a202771e4fbc544e2cdd0cda5d4bfc8e4d2b10478f08f6f8f48828b38596",
+      "bytes": 91416,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/84446eba046c.jpg",
+      "sha256": "1cc38908ce6d17f56f57e4a2250cf2ed88a7464c618a45f0e815d5fecd7a2575",
+      "bytes": 184715,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/86a48f77388c.jpg",
+      "sha256": "ed6f81867aa7bc5c987cf85c42f563f41bab9c952b6c23776917ee2c779de519",
+      "bytes": 162909,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/88e4e5a0da8d.jpg",
+      "sha256": "28bdd6a2161cfd3ce897721b363735ec44b8317a4b0201d22fd4a831941c162c",
+      "bytes": 16537,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/8c3be6601e0e.jpg",
+      "sha256": "31d6d8fe977b40c8548b69943811922afa0e86f3537e071dca03336b8694ea66",
+      "bytes": 19878,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/91314e844026.jpg",
+      "sha256": "d41bdbce133aced478f31e53e05e7c24b896926478fde36e444016c680d53502",
+      "bytes": 222304,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/928621df2a5f.jpg",
+      "sha256": "53ecb3b676a3e72a302671175088643e807e9081b70ffb374da5d93d0eb7ef0e",
+      "bytes": 751080,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/929a8ac52eca.jpg",
+      "sha256": "60dda35cf7a0df5beb2b90aa286f713eaca1d34bf3424cc8580396c6fd6a4209",
+      "bytes": 17122,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/949650ed15bb.jpg",
+      "sha256": "570b5ef9beec0c8c6c42a9ca0fd66a812548e1df801b8b66922e674a4af91744",
+      "bytes": 782837,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/94a068489067.webp",
+      "sha256": "917900adcd003d755c28a8866b367b0e5a651a225469055ba3bc8c3c9e91bb7a",
+      "bytes": 164714,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/992a13b5b95a.jpg",
+      "sha256": "095f216b683c5b30c67bd4ed887de117a367730daca94a211ce8c7a0da41191d",
+      "bytes": 37155,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/9b32ad0e4b66.jpg",
+      "sha256": "b0d904be402448f4ca02aa8694c26d37d5d4e3502a056039794f83c7c5f15bc7",
+      "bytes": 16946,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/9e6f11fa3a01.jpg",
+      "sha256": "50baae8d95152aa0c8a17a77103249fbe88dd5c6fb37d53f5c437dfd87d44167",
+      "bytes": 82270,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/a1e0aaf3d483.jpg",
+      "sha256": "e3f8a8a7325e4adf49e8a7e8c27daab3c8eb95f504e76ee400850019eb333565",
+      "bytes": 137083,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/a2bc11b45b69.jpg",
+      "sha256": "55b2b16631872706c260a32389653da9898c4588b2722403c4fc578e41e1a982",
+      "bytes": 19212,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/a40a0dc33910.jpg",
+      "sha256": "02851b499f54b80814791a502d58cf64c0468c32283701c16c0513af1f5881d5",
+      "bytes": 40781,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/a40c0551597c.jpg",
+      "sha256": "fad2b6dcf0db06f8c6abcd7a85c11c08b77ee755f13893587a6435fbec2414a8",
+      "bytes": 140260,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/a4a6568fa552.webp",
+      "sha256": "561e7c037d9c2349a35e9e630be42056589f0d6d28cad036ff4503aed4239033",
+      "bytes": 16528,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/a799e6f4f9f8.webp",
+      "sha256": "14806852294a1a375e5996aa7552b99dae14074fe7ee2c721e431ebc0eb12b27",
+      "bytes": 417578,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/a8d278beb822.webp",
+      "sha256": "ac6d0b41cba733302d1734b57dfd1a72b35737eb62d8ede8bc9a1c19a14f5bad",
+      "bytes": 90594,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/a921aeab842a.jpg",
+      "sha256": "6102127fe6a06d47ebe6390d0795c5376195c9728faf970bbc71171df19c2e87",
+      "bytes": 25519,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/aa2333efc222.jpg",
+      "sha256": "56bdd2138cca99611d3616a6ba3565cc0e6983ad589af8a9bbfc3c651c52237d",
+      "bytes": 15435,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/ae885ce6deb4.jpg",
+      "sha256": "3bbf5e05b44ca3af8aebf9aeb3e53e371f47b8bb6cb2f368e544be6dcb48c89d",
+      "bytes": 1773713,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/ae9837d87065.jpg",
+      "sha256": "a437657b354e99f350ff379214a0420fc7e1c045a155dabbc5d293a2ff829fde",
+      "bytes": 49122,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/b87928204344.webp",
+      "sha256": "422dc27aabde06c273f6bacaf97c6eb1e95fd02c61b63038db9e545395ead22f",
+      "bytes": 53672,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/ba5c3c9764b0.jpg",
+      "sha256": "6c25639d68c3e3137f88d336ce1d602bbfefa8d028988936f7cd06983f6c9367",
+      "bytes": 93453,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/bca182f41b1c.jpg",
+      "sha256": "7835e9db6feee3ebc877b5e609c335d826c7c7d438829555daf4d61026392696",
+      "bytes": 30775,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/c23df4e6aa19.jpg",
+      "sha256": "5661840aa9b84c77ca9ef89f54356d9972619bd80f6ec7f0225b3b50490268a7",
+      "bytes": 288036,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/c2f9a346c94b.jpg",
+      "sha256": "1378d2fa16e07c72f6601c2d2a7dae024a02e812b081e685ba876b6dac53da03",
+      "bytes": 128456,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/c451957dc316.jpg",
+      "sha256": "6c68fee1e3faa668cf76c5cfdb1dc9acb522e3c6c49d875afcce516bc96f9fe9",
+      "bytes": 31520,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/c47f5fe9e5cf.jpg",
+      "sha256": "c62140460092d84fa3129b78840c9d8979bdabf0661f7b2ded8beb84857ff8b4",
+      "bytes": 31114,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/c48ddee5cb51.jpg",
+      "sha256": "67e8fe8390c8c6158c7ac11fe834d94434d206f181be5c8e3f66b5cbadca2143",
+      "bytes": 95577,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/c9b4db7ed1c0.jpg",
+      "sha256": "a70c50384b4b964b51b449e635f3182fc6915ff1b50bc3a8526f12ecb3060a96",
+      "bytes": 61631,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/cc3fe3e2b5e8.jpg",
+      "sha256": "f91eb6dd4d7115bbed79528239ab67506fad39987937c3f4764236ca091e1ed4",
+      "bytes": 42562,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/cfcdefab54e1.jpg",
+      "sha256": "22dee5c266e35e244c0988dd47fbc2516baedd7ce312a348aab48f2dda974494",
+      "bytes": 100540,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/d2fc703aab0b.jpg",
+      "sha256": "c6872a78f40768ff141d46cea731ff7f4a0dbfd0b03439fae1f549d62a0259a9",
+      "bytes": 354071,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/d344aa560dbd.jpeg",
+      "sha256": "5506406c5e0a0d942fded077ba420073949c821ef42caf0fca0d7ecfc9b29ca0",
+      "bytes": 467831,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/d42a53d54548.png",
+      "sha256": "05401fc5664145e87c0d92619b07bfb452880ec3f79577245ca21ef53f8a35e7",
+      "bytes": 156522,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/d8be30d4b8f9.jpg",
+      "sha256": "b3c9549b097abdbb8920e0000c77ddd89c21a25a90cc622b3b1d81cafe916aa5",
+      "bytes": 50252,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/dd45a461d07a.jpg",
+      "sha256": "87c8dbc4c6ed9af06832d74690554771d2388f13e78578048d67bf300ba63b4d",
+      "bytes": 16631,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/dec364d5c24a.jpg",
+      "sha256": "0394e55bcdc00feeab6ac7fc34554a5813f0aaf9cf01752db6c29b3af97eb451",
+      "bytes": 13799,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/e1fcf9d1b860.jpeg",
+      "sha256": "0f2d67c3983d6353c08e5ba4993b3e22a24eee11a54bd00cebce99ad089a86aa",
+      "bytes": 332445,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/e2de5be7d948.jpg",
+      "sha256": "56d947ab3f328416b1774df50556f50441e860f910c15972604f9d540ad7d68b",
+      "bytes": 40197,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/e306cdeca8ac.jpg",
+      "sha256": "2eda8eeec2ec8a28b09633d62c63e1ff586a962d1f594e14d8ed9ba76e6780c1",
+      "bytes": 30190,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/e464417fe092.png",
+      "sha256": "6fbebdd8d810b3a4703a8f4d71009f989fa765210f84e2d2199e2af5a4de2310",
+      "bytes": 1868047,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/e730608029eb.jpg",
+      "sha256": "47a65decd55c203f1fe75ec1cdd5e80cdeb870435af83e110d0dd0c36fdd94de",
+      "bytes": 459121,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/e85161d8d967.jpg",
+      "sha256": "ebe3066f54a5eb91eed7cf913c8b855760755801891765a2430b6d0e1fa85ece",
+      "bytes": 255387,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/ec24434318fc.jpg",
+      "sha256": "967c8c9e35a5dce52b3c8016b045de71e82ef35c99c88664fd677db685e293b5",
+      "bytes": 81492,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/ecbf95c997db.jpg",
+      "sha256": "01bea6567eb910ea0881de3879e023e9ab4f323168a99a696dbe955cf0fb79a3",
+      "bytes": 149682,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/ef6589d4293a.jpg",
+      "sha256": "755784e9d955c9fcd73db99da899d850c6f4686586518e1d33c1e418d536588b",
+      "bytes": 25206,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/f79866f0ae06.jpg",
+      "sha256": "1ab39537be9b35ebcbf96ac46ac7fc0972579f31dde29a4e6bbfe3a82caf60ed",
+      "bytes": 128914,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/fdca6ca78bd7.jpg",
+      "sha256": "0d8b00aca538a5cadc7a0d2aacede984c04ebd1d3acec339c1c7cb4a86a7a528",
+      "bytes": 23547,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos/fed289bbc480.jpg",
+      "sha256": "7a54d830eb0178f0798fd550bec0002cf624bddf9de25d6344ac4f58ffc301c2",
+      "bytes": 75429,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/photos-manifest.json",
+      "sha256": "a9cb09f25b7bc3bdd804b06ab8451673ee4adfd0a35f150a209fb9fe3dcbe75c",
+      "bytes": 38094,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/reference-corpus.md",
+      "sha256": "0dffa00369791cb93bdbe31070ac9c340617ae036c8a16e6fd674621893a8441",
+      "bytes": 4728,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/videos/-9SxoA5G4mY.info.json",
+      "sha256": "8cf94b35eda1cb5e073e4dc76d2253ba0c990e3af964df122ca721cad9c7c3d0",
+      "bytes": 33605,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/videos/-9SxoA5G4mY.mp4",
+      "sha256": "71033b259f1aac8c7d13400dd5213992156d61e42358e076b742b4657fdd6367",
+      "bytes": 3064953,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/videos/BSth-6oKZlo.info.json",
+      "sha256": "a6c61c5d5fcf40d0b957b8d44157451330e5eb3dcd312250599b553931bd0c29",
+      "bytes": 34187,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/videos/BSth-6oKZlo.mp4",
+      "sha256": "81ae0c6e2d6e7f695a1bf04a15b7b58da677fec04460fc406ab301b7ae4a6ba5",
+      "bytes": 1480997,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/videos/lMg_Sw-hD24.info.json",
+      "sha256": "90f5c26d151ff6268410b0ebe3af2908e5ab0f90458ef00b01e748a5e5a82292",
+      "bytes": 551214,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/videos/lMg_Sw-hD24.mp4",
+      "sha256": "8262c41ee2e3f98b11ee81e2ad911c89343da70226d24ae29c992210a25b7f9e",
+      "bytes": 1867284,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/videos/wooden bead maze toy demo.info.json",
+      "sha256": "dcb5b9023fcfab91bb71e30c1cb90f691f4d0eefac800099d2034455d4f5d3e4",
+      "bytes": 481,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/views/front.jpg",
+      "sha256": "c97b6846fd2908389cf8626ecc62b7c564b442c667e5341f39c1698ddee43599",
+      "bytes": 179161,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/views/threequarter.jpg",
+      "sha256": "9b88ed96b4acbdc7acc3094aa0720df893fe38f3c7ee7ce7a4e8af14a2adff78",
+      "bytes": 157834,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze/views/top.jpg",
+      "sha256": "c4dc170b476eaa8ff610ecd9db914e9e1b694b595d9fcf8bbdb49c4b00c315c6",
+      "bytes": 227508,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-fidelity-report.md",
+      "sha256": "47d4c37e31968b41bfe45eb624decb0cd3e1da3a2e88e2e39cea19d436721b1c",
+      "bytes": 8108,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-handbook.md",
+      "sha256": "c34c29e5f4d726726d3a2dd9761207f7ccd14674650216c5804b285b4b46c478",
+      "bytes": 27584,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-photo3d.html",
+      "sha256": "f03e90199a62551f8219fab35a88237127973cf4fc14a9db87673cce0fd62039",
+      "bytes": 9001,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-render-final.png",
+      "sha256": "dff7db61e02fdaea84d5fb1a87fd1732a5a45529576197bc514122f81ce4ae2e",
+      "bytes": 3244082,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-render.png",
+      "sha256": "ddee6bb1bc29fc104ab1be54a315169ffcc3994b167b8cae8c17d4f8abb165bd",
+      "bytes": 2528864,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-view-front-backdrop.jpg",
+      "sha256": "e08038b98770fe4546457dd42fbb48b95cb168fe0e08f72e77a417eab778969f",
+      "bytes": 45497,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-view-front-depth.png",
+      "sha256": "cfb55a2735c7b806d9ebb5c20a801238e1870caa1a6436900cd358ff576db687",
+      "bytes": 191946,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-view-front.png",
+      "sha256": "7b484620fac9a72e4b055b4e9a526bb66d902c4c8166acc83b36aa28ace0b784",
+      "bytes": 1226084,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-view-threequarter-backdrop.jpg",
+      "sha256": "f1229f769c825bd5b7c45083639ed05f9e4959cf6871b1ac62105770a0e76a4f",
+      "bytes": 69628,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-view-threequarter-depth.png",
+      "sha256": "83c7c727a78bd752999115a737a40e228b52bfb107ed50eeeada9f432346aa3d",
+      "bytes": 202932,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-view-threequarter.png",
+      "sha256": "2488a3d289c1185ac829bed79f9a23b838fcc1482252e1f42695a07ef6ac3580",
+      "bytes": 1178007,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-view-top-backdrop.jpg",
+      "sha256": "87f3d8af9b2fab3e145ed620356610a8dc0796a957226ea196cf506e05448e84",
+      "bytes": 71923,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-view-top-depth.png",
+      "sha256": "c4821d55ffd748ef384bf7e416e78af57b4a793a6c336d815d21e9b651756fe2",
+      "bytes": 226470,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/bead-maze-view-top.png",
+      "sha256": "6c332030753e2036dee21daf1a2bc4504d13ef5dc8e501663908ca48e0016040",
+      "bytes": 1499221,
+      "reasons": [
+        "bead or maze in path"
+      ]
+    },
+    {
+      "path": "docs/codebase-bead-maze.html",
+      "sha256": "0d1984b8ce849511eb25544b2e6d76c85ddbf1de5e1ce88946ca452341d7d3ea",
+      "bytes": 43014,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "docs/vendor/OrbitControls.js",
+      "sha256": "3ddc520827c42be9a8f15f4dde5b15eff60690335edf1f98348ece19c90fc086",
+      "bytes": 32077,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/ash_veneer_diff_1k.jpg",
+      "sha256": "13fd87c8b0a5cc1d4e408fb75b3eb629417ea6b1aaf1672b5adf993640486673",
+      "bytes": 592273,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/ash_veneer_nor_gl_1k.jpg",
+      "sha256": "824898e187fb1d701b36a898ecd736a0464f49fa46233a35592e1ed9348e7fc4",
+      "bytes": 397524,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/ash_veneer_rough_1k.jpg",
+      "sha256": "0857c5e1db0c265d1d04c9451041f55b78cc7613d44caf42c7c9cd449e72d835",
+      "bytes": 797439,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/fine_grained_wood_col_1k.jpg",
+      "sha256": "d171f45ef01bc6e239b00dfaa4961bcd27f7d8e93e3962da3bd3d0ce703d802c",
+      "bytes": 336305,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/fine_grained_wood_nor_gl_1k.jpg",
+      "sha256": "ba95eadc009818e161d0f753191f1bacc3fc861e593be0bc6d82b437f9ec8044",
+      "bytes": 193626,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/fine_grained_wood_rough_1k.jpg",
+      "sha256": "f281f682e62fe322303dfeaa13dac18b5cb9e113617fe0aca43605b49161d82b",
+      "bytes": 215155,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/fingerprints_rough.jpg",
+      "sha256": "fbb97cbebe0fdf6c9cbe1931687eb681ebcfb87441a3870b2761f3f6fcfdc3e5",
+      "bytes": 373460,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/oak_veneer_01_diff_1k.jpg",
+      "sha256": "c14681f72f59f17bff568cae7a837641443b607b899f0c279cd64a5638f877a7",
+      "bytes": 641756,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/oak_veneer_01_nor_gl_1k.jpg",
+      "sha256": "1297acf7b4476d5ccd83cc8b27be96aa6110f7a9c3a40be0bd767bf81b17db01",
+      "bytes": 484844,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/oak_veneer_01_rough_1k.jpg",
+      "sha256": "ca2af5649b628ef05f196793d68cdca874c12ceb6e9ae566976546d9dd5a2604",
+      "bytes": 865194,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/scratches_color.jpg",
+      "sha256": "349196461cf0435481c87513f8162f998562e071acf72bc656f62ac1e0d70459",
+      "bytes": 570509,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/scratches_normal.jpg",
+      "sha256": "fb2d08afac5375f0f93dcd4e52015b54b54a32c66a672f5922539218692450c4",
+      "bytes": 1800637,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/studio.hdr",
+      "sha256": "30933d55e45f0795daf49f3cbefbe0e5ebcb821ee04fb0a2818c02ffc3938817",
+      "bytes": 1686299,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/studio.jpg",
+      "sha256": "622f2be0cd00fb5df0c0336a9a1322db75a4a6f071e068bb6175d50dd2bd2194",
+      "bytes": 43557,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/three.min.js",
+      "sha256": "170c6789f43217c96b3170f4b42fafe135de7f7cd48497a4218f9757ee1d49fa",
+      "bytes": 669884,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/three.module.js",
+      "sha256": "d3f012bd10f68664457ec291bc2524b85ef2a06b45554b0ab04a06e8836d1f5d",
+      "bytes": 1335743,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/white_maple_veneer_diff_1k.jpg",
+      "sha256": "0cdcb6d726ca7e6039ab0eeb2b1828a0ef188b43c2370972cf6eebeaff76aaa0",
+      "bytes": 443279,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/white_maple_veneer_nor_gl_1k.jpg",
+      "sha256": "fb63ac49ab9a8f1e650a7886e570bfb46a1970d73b9a943c29015f3f111078fc",
+      "bytes": 275968,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/white_maple_veneer_rough_1k.jpg",
+      "sha256": "6bacc0bae40c52759e91d77555baad27f9e8cb2bec471d755726262539e6df02",
+      "bytes": 721797,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/wood_table_001_diff_1k.jpg",
+      "sha256": "460dd08d240f4a1f02982415048c3c5c200f385db212da18dc7e2df68bf4d0be",
+      "bytes": 215573,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/wood_table_001_nor_gl_1k.jpg",
+      "sha256": "9bf7ddf5721e225c20290f1772ae37f9bdfd49658f6d458259eb794e2149d3cf",
+      "bytes": 51927,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "docs/vendor/wood_table_001_rough_1k.jpg",
+      "sha256": "a2ca9ae89dfe7b8e2e5e92f0aa43467845417de8a50205b5852ef0d57c7624f9",
+      "bytes": 237261,
+      "reasons": [
+        "viewer or rendering dependency"
+      ]
+    },
+    {
+      "path": "scripts/build-bead-maze-views.py",
+      "sha256": "50804465b7638209a7a5326cfa609952b1e9415bc2481a924f82edafd84845a2",
+      "bytes": 2593,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "scripts/build-pages.mjs",
+      "sha256": "b8453d46986d67fea8090d20673604b7e40d399c347d2424f8bd7314365f82c1",
+      "bytes": 1659,
+      "reasons": [
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "scripts/postprocess-bead-render.py",
+      "sha256": "e9895341c3dd1c9f39679c05fd50c0af8a9629e470be8d2eced5d5ae2b3911e1",
+      "bytes": 1885,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    },
+    {
+      "path": "scripts/render-bead-maze.py",
+      "sha256": "690f233573a50cab429346e667c14fb362d38f865f96712033523cdba704f5b2",
+      "bytes": 25620,
+      "reasons": [
+        "bead or maze in path",
+        "bead maze reference in content"
+      ]
+    }
+  ]
+}
