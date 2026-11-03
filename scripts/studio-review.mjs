@@ -119,6 +119,7 @@ try {
   await page.route('**/api/scan', route => route.fulfill({ json: graph }));
   await page.locator('#scan-button').click();
   await page.waitForFunction(() => document.querySelector('#scene').dataset.nodes === '600');
+  await page.waitForFunction(() => document.querySelector('#scene').dataset.support === 'ready', null, { timeout: 180000 });
   const largeStart = Date.now();
   await page.locator('#studio-photo').click();
   await samples(4);

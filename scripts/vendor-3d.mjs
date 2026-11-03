@@ -26,6 +26,13 @@ for (const [packageName, license] of [["n8ao", "LICENSE"], ["postprocessing", "L
   await cp(`node_modules/${packageName}/${license}`, `docs/vendor/${packageName}.LICENSE`);
 }
 // Keep the progressive renderer lazy and separate from the interactive bundle.
+await build({
+  stdin: { contents: "export { MeshBVH } from 'three-mesh-bvh';", resolveDir: process.cwd() },
+  bundle: true, format: "esm", minify: true, legalComments: "eof", outfile: "docs/vendor/contact.js",
+  plugins: [{ name: "shared-three", setup(builder) {
+    builder.onResolve({ filter: /^three$/ }, () => ({ path: "./three.module.js", external: true }));
+  } }],
+});
 // v0.0.23 declares r151+ support but assumes Scene rotation fields from r163.
 // Virtual dispatch also covers the empty Scene created inside its constructor.
 await build({

@@ -8,7 +8,7 @@ const source = (count = 55) => ({
   edges: [],
 });
 
-test("every file, including isolated files, sits on an anchored directory track", () => {
+test("the axis layout assigns every file, including isolated files, to an anchored directory track", () => {
   const graph = positionGraph(source());
   assert.equal(graph.nodes.length, 55);
   assert.deepEqual(graph.edges, [], "support tracks do not invent dependencies");
@@ -16,6 +16,8 @@ test("every file, including isolated files, sits on an anchored directory track"
     const rail = graph.rails.find((item) => item.id === node.rail);
     assert.equal(rail.group, node.group);
     const { position } = pointAlong(rail.points, node.fraction);
+    // This is the pre-seating axis frame. Actual rendered centers subsequently
+    // move perpendicular to it until their geometry reaches support.
     assert.ok(Math.hypot(node.x - position[0], node.y - position[1], node.z - position[2]) < 0.001);
     assert.ok(Math.abs(Math.hypot(...node.tangent) - 1) < 0.001);
   }

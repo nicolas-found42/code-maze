@@ -27,6 +27,8 @@ The toy uses five drilled bead shapes, including a rounded block baked with BVH 
 
 Compare the same fixture and camera: [before](docs/maze-fidelity/before.jpg) · [after](docs/maze-fidelity/after.jpg).
 
+Beads receive geometry-checked support poses before a photograph is enabled; the map remains interactive while the toy finishes. These are authored contact poses, not a simulation of sliding beads.
+
 Choose **Studio photo** to photograph your generated maze with progressive path tracing, soft studio lights and indirect color bounce. Drag or zoom to choose an angle; the interactive map appears while the new view refines. **Save photo** downloads the current image as a PNG, up to 1600 pixels on its long side. After 256 samples, supported WebGPU devices refine the light buffer with Open Image Denoise, guided by the same model's albedo and surface normals. The model ships locally; unsupported devices retain spatial denoising. Selection or a new scan releases the photo's GPU resources, and hidden tabs pause refinement. Apple GPUs use a single-layer enamel finish to avoid an upstream black-clearcoat defect. Photographic indistinguishability remains unverified. [Converged close-up](docs/maze-fidelity/studio-close.png).
 
 The server binds to `127.0.0.1`. Scanning reads files locally and does not execute repository code or send source to a service. Only map metadata is returned to the browser; source text stays out of the graph.
@@ -80,6 +82,8 @@ npm run test:ui
 npm run test:fidelity
 npm run test:studio
 npm run test:photographic
+npm run test:contact -- --large
+npm run test:contact-ui
 ```
 
 The tests cover module resolution, nested ignore rules, non-JavaScript references, cycles, limits, missing paths, and API behavior. Layout tests check that every bead is threaded onto an anchored track and that beads have physical clearance. Actual bead/tube mesh intersections check each bead's own curved wire at 30, 240 and 600 files. Independent checks derived from the generated vertices verify that corkscrews thread tall-loop openings and low winding paths pass beneath both other track types.

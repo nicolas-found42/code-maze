@@ -1,6 +1,7 @@
 import { createCanvasMaze } from "./bead-fallback.js";
 import { motion } from "./playground-motion.js";
-import { createBeadGeometries, mapBoardUVs } from "./bead-geometry.js";
+import { createBeadGeometries, createSupportGeometry, mapBoardUVs } from "./bead-geometry.js";
+import { createBeadSeating, seatingInput } from "./bead-seating-client.js";
 import { createToyMaterials } from "./bead-materials.js";
 import { createStudioRendering } from "./bead-rendering.js";
 import { createPhotograph } from "./bead-photograph.js";
@@ -71,6 +72,7 @@ export function createMaze(container, onSelect) {
   const toyMaterials = createToyMaterials(THREE, renderer, invalidate);
   const { wood, ply } = toyMaterials;
   const sharedGeometry = createBeadGeometries(THREE);
+  const seating = createBeadSeating();
   let studio, photograph;
   photograph = createPhotograph(THREE, container, camera, () => content, () => {
     stopEffects();
@@ -287,7 +289,12 @@ export function createMaze(container, onSelect) {
   resize();
   return {
     setGraph(next) {
+      seating.cancel();
       photograph.close();
+      const photoButton = document.getElementById("studio-photo");
+      photoButton.disabled = true;
+      container.dataset.support = "working";
+      document.getElementById("photo-status").textContent = "Finishing the toy… You can explore while it gets ready.";
       stopEffects();
       if (content) { scene.remove(content); dispose(content); }
       dispose(referenceLayer);
@@ -313,9 +320,8 @@ export function createMaze(container, onSelect) {
       const degrees = new Map(graph.nodes.map((node) => [node.id, 0]));
       for (const edge of graph.edges) { degrees.set(edge.source, degrees.get(edge.source) + 1); degrees.set(edge.target, degrees.get(edge.target) + 1); }
       for (const rail of graph.rails) {
-        const curve = new THREE.CatmullRomCurve3(rail.points.map((point) => new THREE.Vector3(...point)));
         const material = toyMaterials.wire(rail.color);
-        const wire = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.min(800, Math.max(200, rail.points.length)), 4.8, 16, false), material);
+        const wire = new THREE.Mesh(createSupportGeometry(THREE, rail), material);
         wire.castShadow = true; wire.receiveShadow = true; wire.userData.group = rail.group;
         content.add(wire); rails.push(wire);
         for (const point of [rail.points[0], rail.points.at(-1)]) {
@@ -351,6 +357,34 @@ export function createMaze(container, onSelect) {
       container.dataset.tracks = String(graph.rails.length);
       meshes.slice(0, 80).forEach((mesh, index) => {
         effects.push(motion.animate(mesh.scale, { x: [.05, 1], y: [.05, 1], z: [.05, 1], duration: 650, delay: Math.min(index * 22, 400), ease: "outElastic(1, .6)", onUpdate: invalidate }));
+      });
+      const ownedContent = content, ownedGraph = graph, ownedMeshes = meshes;
+      board.updateMatrixWorld(true);
+      const baseTop = new THREE.Box3().setFromObject(board).max.y;
+      seating.run(seatingInput(graph, baseTop)).then(result => {
+        if (!result || content !== ownedContent) return;
+        if (result.positions?.length !== ownedMeshes.length || !result.positions.every(point =>
+          Array.isArray(point) && point.length === 3 && point.every(Number.isFinite))) throw new Error("Invalid toy contact result");
+        ownedGraph.nodes.forEach((node, i) => {
+          [node.x, node.y, node.z] = result.positions[i];
+          ownedMeshes[i].position.set(node.x, node.y, node.z);
+        });
+        const byId = new Map(ownedGraph.nodes.map(node => [node.id, node]));
+        for (const label of labels) if (label.kind === "file") {
+          const node = byId.get(label.id); label.position.set(node.x, node.y + 32, node.z);
+        }
+        if (selected) {
+          const node = byId.get(selected); halo.position.set(node.x, node.y, node.z);
+          stopEffects(); makeReferences(selected);
+        }
+        container.dataset.support = "ready";
+        photoButton.disabled = false;
+        document.getElementById("photo-status").textContent = "";
+        invalidate();
+      }).catch(() => {
+        if (content !== ownedContent) return;
+        container.dataset.support = "failed";
+        document.getElementById("photo-status").textContent = "Studio photo unavailable on this device. You can still explore the map.";
       });
     },
     select(id) {

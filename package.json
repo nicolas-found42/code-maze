@@ -17,7 +17,9 @@
     "assets:3d": "node scripts/bake-bead.mjs && node scripts/vendor-3d.mjs",
     "test:fidelity": "node scripts/fidelity-review.mjs",
     "test:studio": "node scripts/studio-review.mjs",
-    "test:photographic": "node scripts/photographic-review.mjs"
+    "test:photographic": "node scripts/photographic-review.mjs",
+    "test:contact": "node scripts/contact-review.mjs",
+    "test:contact-ui": "node scripts/contact-browser-review.mjs"
   },
   "engines": {
     "node": ">=22"

@@ -2,6 +2,11 @@ import blockData from "./vendor/bead-block.js";
 
 const COATING_REPEAT = 32; // Layout millimetres; one shared fine-finish tile.
 
+export function createSupportGeometry(THREE, rail) {
+  const curve = new THREE.CatmullRomCurve3(rail.points.map(point => new THREE.Vector3(...point)));
+  return new THREE.TubeGeometry(curve, Math.min(800, Math.max(200, rail.points.length)), 4.8, 16, false);
+}
+
 // All shapes fit inside the layout's radius-27 clearance envelope. Local +Y is
 // the drill axis, aligned to the track tangent by bead-scene.
 export function createBeadGeometries(THREE) {

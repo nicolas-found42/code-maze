@@ -49,7 +49,7 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
     button.setAttribute("aria-pressed", "false");
     button.textContent = "Studio photo";
     save.hidden = true;
-    status.textContent = message;
+    status.textContent = message || (container.dataset.support === "working" ? "Finishing the toy… You can explore while it gets ready." : "");
     container.dataset.photo = "off";
     delete container.dataset.photoSamples;
     delete container.dataset.photoDenoising;

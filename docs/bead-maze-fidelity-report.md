@@ -114,7 +114,24 @@ The 30-file fixture before the surrounding studio sweep and coating-scale correc
 - **Persona Critique:** One manufactured coating should not change its fine-structure scale by nearly four times between a block and a turned bead.
 - **Acceptance Criterion:** Declare a physical coating repeat, retain closed texture phase around turned forms, preserve geometry/bores/normals and inspect fresh finished captures. This does not imply that the chosen finish is physically measured from a real toy.
 
+#### ISS-5.12 — Loose beads floated centrally inside their bores
+
+- **Severity:** MEDIUM
+- **Location:** Axis placement in `docs/bead-layout.js` and final mesh poses.
+- **Tool Evidence:** Before the seating pass, actual triangle distance for near-horizontal block `f5` was 2.15423 mm to its own wire, with tangent Y 0.09652 and lowest point 62.75 mm above a base top at 37 mm. The necessary-contact reproduction failed. The 30/240-file probes found positive own-wire gaps of roughly 0.6–2.2 mm throughout.
+- **Persona Critique:** For an ordinary passive wooden bead without hidden adhesive or magnetic support, a generous drilled clearance does not hold it in mid-air.
+- **Acceptance Criterion:** Supported rendered poses with less than 0.1 mm surface separation, no wire/bead/base penetration, preserved counts/weave/spacing, and photography only after corrected poses apply. The unobstructed original block must reach its own wire; an earlier base or neighboring contact must not be crossed to force that result.
+
 ### Fixes
+
+#### FIX-5.12 → ISS-5.12
+
+- **Location:** `bead-contact.js`, `bead-seating.js`, the contact worker/controller, shared support geometry and scene integration.
+- **Action Taken:** Use BVH-assisted continuous triangle SAT to find first contact along gravity projected perpendicular to each authored tangent. Stop 0.03 mm before that contact, then independently verify a surface witness below 0.08 mm; an early grazing result uses conservative true-distance refinement. Include wires, the base and neighboring beads. Keep fractions and quaternions fixed. Apply final centers to the rendered graph, labels, selection halo and reference endpoints together.
+- **Tool Verification:** Independent reconstructed geometry checks cover 30/240/600 files and 2,000 files with 2/3/19 groups: all contacts measured below 0.1 mm, no wire/bead/base intersections, original block contact restored and center spacing retained. Browser checks cover actual mesh transforms, photograph readiness, worker termination, responsive selection, rescan cancellation, late messages and malformed/failing results. The existing studio lifecycle/export suite passes with these poses.
+- **Resources:** A dedicated local worker owns its geometry/BVHs and is terminated after completion, error, cancellation or a 180 s deadline. Only numeric geometry crosses the boundary. Local solve observations were approximately 0.44 s for 30 beads, 8.9 s for 600 and 28 s for 2,000; browser startup to the supported 30-bead map was about 0.8–1.5 s. These are different measurements on one machine, not cross-device benchmarks.
+- **Limits:** This is constrained geometric authoring. Axial sliding, tipping, friction, elasticity and complete force/moment balance are not simulated. Zero-area redundant seam triangles are ignored; this solver is not offered for arbitrary degenerate geometry or non-rigid transforms. Photographic equivalence remains open under ISS-5.01.
+
 
 #### FIX-5.11 → ISS-5.11
 
