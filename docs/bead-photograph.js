@@ -4,13 +4,14 @@
 // lifetime, including allocations upstream v0.0.23's dispose() fails to release.
 import { createPhotoDenoising, readLinearImage } from "./photo-denoising.js";
 import { renderPhotoGuides } from "./photo-guides.js";
+import { createPhotoStage } from "./photo-stage.js";
 
 export function createPhotograph(THREE, container, sourceCamera, getContent, stopMotion) {
   const button = document.getElementById("studio-photo");
   const save = document.getElementById("save-photo");
   const status = document.getElementById("photo-status");
   let generation = 0, renderer, tracer, camera, frame, timer, environment, floor, denoise;
-  let active = false;
+  let active = false, stageSpan = 0;
   let neural, neuralQuad, neuralTexture, photoScene, refining = false, refined = false, revision = 0;
   const splitGeometries = new Map();
   const photoMaterials = new Map();
@@ -21,6 +22,7 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
     generation++;
     revision++;
     active = false;
+    stageSpan = 0;
     neural?.dispose(); neural = undefined;
     neuralTexture?.dispose(); neuralTexture = undefined;
     neuralQuad?.material.dispose(); neuralQuad?.dispose(); neuralQuad = undefined;
@@ -73,6 +75,8 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
     camera.copy(sourceCamera);
     camera.position.multiplyScalar(SCALE);
     camera.near *= SCALE; camera.far *= SCALE;
+    // Auxiliary raster passes must reach the same distant sweep as the tracer.
+    camera.far = Math.max(camera.far, stageSpan * 64);
     camera.updateProjectionMatrix();
     // The copied layout has been converted to metres. Keep the toy in focus
     // like a stopped-down product photograph, rather than a miniature diorama.
@@ -248,9 +252,8 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
       const extent = bounds.getSize(new THREE.Vector3());
       const center = bounds.getCenter(new THREE.Vector3());
       const span = Math.max(extent.x, extent.y, extent.z);
-      floor = new THREE.Mesh(new THREE.PlaneGeometry(span * 200, span * 200), new THREE.MeshStandardMaterial({ color: 0xf4f1e9, roughness: 0.86 }));
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.y = bounds.min.y - 0.0005;
+      stageSpan = span;
+      floor = createPhotoStage(THREE, span, center, bounds.min.y - 0.0005);
       scene.add(floor);
       function softbox(color, intensity, width, height, position) {
         const light = new THREE.RectAreaLight(color, intensity, span * width, span * height);

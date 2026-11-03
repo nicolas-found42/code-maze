@@ -6,7 +6,7 @@ Historical measurements of the fixed photographic companion and its separate pro
 
 The default entry point opens the generated codebase map. **Studio photo** progressively traces that map's actual drilled meshes, materials and camera with diffuse interreflection and rectangular studio lights. The image-based companion below is a separate reference; it does not represent generated files or tracks. No blind photographic equivalence test of the current generated viewer has passed. This remains an open acceptance requirement.
 
-The 30-file fixture: [earlier interactive preview](maze-fidelity/studio-preview.jpg) · [converged guided studio photograph](maze-fidelity/studio.png) · [1600-pixel close-up](maze-fidelity/studio-close.png). Modeling, placement and materials also changed, so this is not an isolated denoiser comparison or a blind comparison against a real toy. The photographs use the Apple single-layer finish described in [the tool notes](vendor/fidelity-libraries.md).
+The 30-file fixture before the surrounding studio sweep: [earlier interactive preview](maze-fidelity/studio-preview.jpg) · [converged guided studio photograph](maze-fidelity/studio.png) · [1600-pixel close-up](maze-fidelity/studio-close.png). Modeling, placement and materials also changed, so this is not an isolated denoiser comparison or a blind comparison against a real toy. The photographs use the Apple single-layer finish described in [the tool notes](vendor/fidelity-libraries.md). The photographic suite writes fresh hero, close, low and mobile captures to `.scratch/verification/photographic/`.
 
 ## Selected Persona
 
@@ -98,7 +98,22 @@ The 30-file fixture: [earlier interactive preview](maze-fidelity/studio-preview.
 - **Persona Critique:** Retain the notices of the specialist code being redistributed.
 - **Acceptance Criterion:** Copy the upstream notice during rebuilding, record the version and serve the license in the static export.
 
+#### ISS-5.10 — Low-angle photographs exposed an artificial horizon
+
+- **Severity:** HIGH
+- **Location:** `docs/bead-photograph.js`, studio floor.
+- **Tool Evidence:** A fresh 256-sample/OIDN low view showed a sharp floor/background boundary across the entire frame. Clear background bands measured a largest adjacent-row RGB brightness step of 42.25 on the 0–255 scale. Hero and close captures had not exposed this angle.
+- **Persona Critique:** An arbitrary-view product photograph must not reveal a floor/sky cut when the camera orbits lower.
+- **Acceptance Criterion:** Continuous low-angle studio background with actual converged captures, preserved guide alignment, export and cleanup.
+
 ### Fixes
+
+#### FIX-5.10 → ISS-5.10
+
+- **Location:** `docs/photo-stage.js`, photographic renderer and regression suite.
+- **Action Taken:** Replaced the flat plane with a broad flat contact surface, smooth curved sweep and surrounding wall. All azimuths use the same actual geometry. Extended the auxiliary camera's far plane so the guide buffers reach the sweep. Kept the flat center to two triangles for BVH traversal and retained the existing owned geometry/material disposal.
+- **Tool Verification:** Geometric rays cross the horizon continuously in every azimuth; the photographic suite measures the rendered low-view background and compares guide normals to independent camera-ray intersections. The initial converged sweep reduced the largest background row step to approximately 1.0; its regression limit is 6. These are bounded engineering checks, not a photographic equivalence verdict.
+- **Limit:** The sweep changes indirect illumination and has a darker distant background. The first measured full-size hero took 76.4 s on the local machine, compared with roughly 29–32 s before the sweep. Cross-device cost and full photographic equivalence remain unverified.
 
 #### FIX-5.09 → ISS-5.09
 

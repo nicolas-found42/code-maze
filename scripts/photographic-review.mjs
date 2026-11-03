@@ -41,7 +41,10 @@ try {
     const source = await readFile(new URL('../docs/photo-guides.js', import.meta.url), 'utf8');
     assert.ok(source.includes('return output;'));
     const body = source.replace('return output;', `
-      const expected = new THREE.Vector3(0,1,0).transformDirection(camera.matrixWorldInverse).toArray().map(v=>(v+1)/2);
+      const ray = new THREE.Raycaster();
+      ray.setFromCamera(new THREE.Vector2(-1 + 1/width, 1 - 1/height), camera);
+      const hit = ray.intersectObjects(scene.children, true)[0];
+      const expected = hit.normal.clone().transformDirection(hit.object.matrixWorld).transformDirection(camera.matrixWorldInverse).toArray().map(v=>(v+1)/2);
       window.photoGuides = { width, height, albedo: [...output.albedo.data.slice(0,4)], normal: [...output.normal.data.slice(0,4)], expected };
       return output;`);
     await route.fulfill({ contentType: 'text/javascript', body });
@@ -63,7 +66,7 @@ try {
     assert.equal(observed.runtime.activeExecutionCount, 0);
     assert.ok(observed.runtime.lastExecution.tileCount > 0);
     assert.ok(Math.abs(observed.guides.albedo[0] - 0.90466) < 0.01, 'floor albedo stays linear, without sRGB or ACES conversion');
-    observed.guides.expected.forEach((value, axis) => assert.ok(Math.abs(observed.guides.normal[axis] - value) < 0.005, 'floor normals retain encoded view-space convention'));
+    observed.guides.expected.forEach((value, axis) => assert.ok(Math.abs(observed.guides.normal[axis] - value) < 0.005, 'floor/sweep normals match independent camera-ray intersections'));
     await page.locator('#scene').screenshot({ path: new URL(`${name}.png`, output).pathname });
     console.log(JSON.stringify({ view: name, width: observed.guides.width, height: observed.guides.height, precision: observed.runtime.precision, tiles: observed.runtime.lastExecution.tileCount, inferenceMs: observed.runtime.lastExecution.durationMs, resources: observed.runtime.resources }));
   }
@@ -77,6 +80,33 @@ try {
   const downloading = page.waitForEvent('download'); await page.locator('#save-photo').click();
   const download = await downloading; await download.saveAs(new URL('close-export.png', output).pathname);
   assert.equal(download.suggestedFilename(), 'code-maze-studio.png');
+  await canvas.press('0');
+  for (let i = 0; i < 4; i++) await canvas.press('ArrowDown');
+  await ready('low');
+  const horizonStep = await page.evaluate(() => {
+    const source = document.querySelector('.photo-canvas');
+    const canvas = document.createElement('canvas'); canvas.width = source.width; canvas.height = source.height;
+    const context = canvas.getContext('2d'); context.drawImage(source, 0, 0);
+    const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+    let previous, maximum = 0;
+    // Clear studio bands beside the toy, above the board: no object edges can
+    // conceal a full-width floor/background discontinuity in these pixels.
+    for (let y = 0; y < canvas.height * 0.55; y++) {
+      let sum = 0, count = 0;
+      for (let x = 0; x < canvas.width; x++) if (x < canvas.width * 0.12 || x > canvas.width * 0.88) {
+        const offset = (y * canvas.width + x) * 4;
+        sum += (data[offset] + data[offset + 1] + data[offset + 2]) / 3; count++;
+      }
+      const value = sum / count;
+      if (previous !== undefined) maximum = Math.max(maximum, Math.abs(value - previous));
+      previous = value;
+    }
+    return maximum;
+  });
+  assert.ok(horizonStep < 6, `seamless low-angle backdrop; largest clear-background row step is ${horizonStep}`);
+  console.log('Low-view maximum background row step:', horizonStep);
+  const lowDownload = page.waitForEvent('download'); await page.locator('#save-photo').click();
+  await (await lowDownload).saveAs(new URL('low-export.png', output).pathname);
   await page.setViewportSize({ width: 390, height: 844 });
   await canvas.press('0'); await ready('mobile');
   await page.locator('#studio-photo').click();
@@ -133,7 +163,7 @@ try {
   assert.equal(await fallback.locator('#scene').getAttribute('data-photo-denoising'), 'spatial');
   assert.deepEqual(models, [], 'unsupported WebGPU skips the model and guide work');
   assert.deepEqual(fallbackErrors, []);
-  console.log('Photographic validation passed: converged hero/close/mobile, actual guided OIDN, linear albedo and encoded normals, PNG export, device/resource release, cancellation during initialization/inference, local-only assets, missing-model fallback. Photographic indistinguishability is not established by this test.');
+  console.log('Photographic validation passed: converged hero/close/low/mobile, seamless low-angle backdrop, actual guided OIDN, linear albedo and encoded normals, PNG export, device/resource release, cancellation during initialization/inference, local-only assets, missing-model fallback. Photographic indistinguishability is not established by this test.');
 } finally {
   await browser?.close(); app.closeAllConnections(); app.close();
   await rm(fixture, { recursive: true, force: true });
