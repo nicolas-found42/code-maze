@@ -26,6 +26,22 @@ function finishTangents(geometry) {
   return geometry;
 }
 
+// Refine only the painted meridian. Convex corner cuts round its outline
+// without enlarging the clearance envelope or changing the drilled bore.
+function roundedMeridian(points) {
+  for (let pass = 0; pass < 2; pass++) {
+    const refined = [points[0]];
+    for (let i = 0; i < points.length - 1; i++) {
+      const a = points[i], b = points[i + 1];
+      refined.push([0.75 * a[0] + 0.25 * b[0], 0.75 * a[1] + 0.25 * b[1]],
+        [0.25 * a[0] + 0.75 * b[0], 0.25 * a[1] + 0.75 * b[1]]);
+    }
+    refined.push(points.at(-1));
+    points = refined;
+  }
+  return points;
+}
+
 export function createSupportGeometry(THREE, rail) {
   const curve = new THREE.CatmullRomCurve3(rail.points.map(point => new THREE.Vector3(...point)));
   return new THREE.TubeGeometry(curve, Math.min(800, Math.max(200, rail.points.length)), 4.8, 16, false);
@@ -79,6 +95,7 @@ export function createBeadGeometries(THREE) {
   }
   sphere.push([7.1, -21], [7, -20.2], [7, 20.2], [7.1, 21], sphere[0]);
   const barrel = [[8,18], [13,18], [18,17.7], [21,16.3], [23,13], [24,7], [24.2,0], [24,-7], [23,-13], [21,-16.3], [18,-17.7], [13,-18], [8,-18], [7,-17], [7,17], [8,18]];
+  const barrelOutside = roundedMeridian(barrel.slice(0, 13));
   const ring = [];
   for (let i = 0; i <= 40; i++) {
     const a = -Math.PI / 2 + i / 40 * Math.PI * 2;
@@ -96,7 +113,7 @@ export function createBeadGeometries(THREE) {
   block.setIndex(blockData.index);
   for (const group of blockData.groups) block.addGroup(group.start, group.count, group.materialIndex);
   finishTangents(block);
-  return [turned(sphere, 32), block, turned(barrel, 12), ringGeometry, turned(spool, 15)];
+  return [turned(sphere, 32), block, turned([...barrelOutside, ...barrel.slice(13)], barrelOutside.length - 1), ringGeometry, turned(spool, 15)];
 }
 
 export function createBoardGeometry(THREE, width, depth) {

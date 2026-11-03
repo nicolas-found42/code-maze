@@ -156,7 +156,24 @@ The [paint-finish close capture at 50c57a2](maze-fidelity/paint-finish-close.png
 - **Persona Critique:** Filtering must not borrow a veneer from the opposite edge of the panel.
 - **Acceptance Criterion:** Shared texel-centre guarded sampling; real packed/source border samples agree within 8-bit quantization, with normal/bake/lifecycle checks retained.
 
+#### ISS-5.17 — Barrel shoulders exposed large polygon corners
+
+- **Severity:** MEDIUM
+- **Location:** The barrel meridian in `bead-geometry.js`.
+- **Tool Evidence:** Its 13 painted profile points changed direction by up to 33.76°. A fixed-camera, 1600-pixel, 256-sample raw/OIDN specimen showed visible shoulder corners despite smooth normals. Refining the outer meridian reduced the largest turn to 9.27° and rounded the outline; the experimental comparison also doubled radial resolution, so it does not isolate that contribution.
+- **Persona Critique:** Smooth shading does not repair a polygonal silhouette at the close viewing distances available in the viewer.
+- **Acceptance Criterion:** Round the painted outline within its clearance envelope, retain the original bore/lip dimensions and material boundary, and verify shared UV/tangents, actual contacts and generated photographs.
+
 ### Fixes
+
+#### FIX-5.17 → ISS-5.17
+
+- **Location:** `bead-geometry.js`, `test/barrel-contour.test.mjs`.
+- **Action Taken:** Apply two convex corner-cut refinements to the barrel's painted meridian only. Keep its 64 radial segments, exact bore/chamfer points, paint boundary and physical coating chart. Other bead forms and paint materials are unchanged. The barrel now has 6,912 triangles rather than 1,920; geometry remains shared by all beads of that kind.
+- **Tool Verification:** The geometric regression measures a maximum meridian turn below 10°, checks the radius-27 envelope and exact bore/lip points, and verifies complete draw-group coverage. Focused contour, physical-UV-scale and actual-tracer tangent tests pass. Revision-bound full-suite results and fresh captures are retained in the review ledger.
+- **Limits:** This is a local silhouette repair, not a measured reconstruction of a manufactured bead. Earlier byte-identical geometry statements describe their own repairs; this repair intentionally changes barrel vertices and requires seating to use the refined mesh. The initial specimen had a fixed pigment and f/64 camera, distinct from the normal full-scene photographic configuration. ISS-5.01 remains open.
+
+The associated paint experiment evaluated object-space axial fibres at authored 0, 5 and 15 µm coefficients under a common weaker coating field, with raw and guided 256-sample captures. A separate control reduced the existing height field to 20%. Neither established a convincing coated-timber appearance, so neither finish is shipped. No atlas dependency or extra per-shape textures were added for that inconclusive result.
 
 #### FIX-5.16 → ISS-5.16
 
