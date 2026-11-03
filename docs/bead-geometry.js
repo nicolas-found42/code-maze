@@ -1,6 +1,29 @@
 import blockData from "./vendor/bead-block.js";
+import { PAINT_REPEAT } from "./paint-finish.js";
 
-const COATING_REPEAT = 32; // Layout millimetres; one shared fine-finish tile.
+const COATING_REPEAT = PAINT_REPEAT;
+
+function finishTangents(geometry) {
+  // The raster viewer/normal guide and tracer must use the same authored
+  // basis, rather than derivative frames in one and computed tangents in the
+  // other. ExtrudeGeometry is nonindexed; an identity index preserves draws.
+  if (!geometry.index) geometry.setIndex(Array.from({ length: geometry.attributes.position.count }, (_, i) => i));
+  geometry.computeTangents();
+  // r160's lathe join normals need not be unit length. computeTangents assumes
+  // they are; orthogonalize against the normalized shading direction while
+  // retaining the original geometry/normal buffers and UV handedness.
+  const normals = geometry.attributes.normal, tangents = geometry.attributes.tangent;
+  for (let i = 0; i < tangents.count; i++) {
+    const nx = normals.getX(i), ny = normals.getY(i), nz = normals.getZ(i);
+    const squared = nx * nx + ny * ny + nz * nz;
+    let x = tangents.getX(i), y = tangents.getY(i), z = tangents.getZ(i);
+    const projection = (x * nx + y * ny + z * nz) / squared;
+    x -= nx * projection; y -= ny * projection; z -= nz * projection;
+    const length = Math.hypot(x, y, z);
+    tangents.setXYZ(i, x / length, y / length, z / length);
+  }
+  return geometry;
+}
 
 export function createSupportGeometry(THREE, rail) {
   const curve = new THREE.CatmullRomCurve3(rail.points.map(point => new THREE.Vector3(...point)));
@@ -46,7 +69,7 @@ export function createBeadGeometries(THREE) {
     geometry.clearGroups();
     geometry.addGroup(0, paint.length, 0);
     geometry.addGroup(paint.length, timber.length, 1);
-    return geometry;
+    return finishTangents(geometry);
   }
   const sphere = [];
   for (let i = 0; i <= 32; i++) {
@@ -71,6 +94,7 @@ export function createBeadGeometries(THREE) {
   for (let i = 0; i < blockUV.count; i++) blockUV.setXY(i, blockUV.getX(i) * 30 / COATING_REPEAT, blockUV.getY(i) * 30 / COATING_REPEAT);
   block.setIndex(blockData.index);
   for (const group of blockData.groups) block.addGroup(group.start, group.count, group.materialIndex);
+  finishTangents(block);
   return [turned(sphere, 32), block, turned(barrel, 12), ringGeometry, turned(spool, 15)];
 }
 
@@ -84,4 +108,5 @@ export function mapBoardUVs(geometry) {
       group.materialIndex === 0 ? -z / 420 : y / 3.25);
   }
   uv.needsUpdate = true;
+  finishTangents(geometry);
 }

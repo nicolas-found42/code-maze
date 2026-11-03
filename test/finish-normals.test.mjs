@@ -22,3 +22,20 @@ test("paint normals agree with a periodic height field in texture UV space", () 
     assert.equal(map[index + 3], 255);
   }
 });
+
+test("different physical texel pitches produce independent X and Y slopes", () => {
+  const width = 64, height = 32, pitchX = 0.4, pitchY = 0.05;
+  const heights = Float32Array.from({ length: width * height }, (_, i) =>
+    0.02 * Math.sin(2 * Math.PI * (i % width) / width) + 0.01 * Math.sin(2 * Math.PI * Math.floor(i / width) / height));
+  const encoded = normalsFromHeight(heights, width, height, 1 / (2 * pitchX), 1 / (2 * pitchY));
+  for (const [x, y] of [[0, 0], [7, 9], [63, 31]]) {
+    const offset = (y * width + x) * 4;
+    const z = encoded[offset + 2] / 127.5 - 1;
+    const actualX = (encoded[offset] / 127.5 - 1) / z;
+    const actualY = (encoded[offset + 1] / 127.5 - 1) / z;
+    const expectedX = -0.02 * Math.cos(2 * Math.PI * x / width) * Math.sin(2 * Math.PI / width) / pitchX;
+    const expectedY = 0.01 * Math.cos(2 * Math.PI * y / height) * Math.sin(2 * Math.PI / height) / pitchY;
+    assert.ok(Math.abs(actualX - expectedX) < 0.005);
+    assert.ok(Math.abs(actualY - expectedY) < 0.005);
+  }
+});

@@ -8,6 +8,8 @@ The default entry point opens the generated codebase map. **Studio photo** progr
 
 The 30-file fixture before the surrounding studio sweep and coating-scale correction: [earlier interactive preview](maze-fidelity/studio-preview.jpg) · [converged guided studio photograph](maze-fidelity/studio.png) · [1600-pixel close-up](maze-fidelity/studio-close.png). Modeling, placement and materials also changed, so this is not an isolated denoiser comparison or a blind comparison against a real toy. The photographs use the Apple single-layer finish described in [the tool notes](vendor/fidelity-libraries.md). The photographic suite writes fresh hero, close, low and mobile captures to `.scratch/verification/photographic/`.
 
+The current [paint-finish close capture](maze-fidelity/paint-finish-close.png) uses supported poses, the surrounding sweep and an authored periodic paint height field. Surface variation remains visible after 256 samples and guided OIDN, unlike the prior subpixel noise. It still reads as a render; the full photographic requirement remains open. Captured-HDRI experiments were evaluated and rejected for this production stage, as documented in [the lighting research](maze-3d-tools-research.md#photographed-studio-illumination--evaluated-not-adopted).
+
 ## Selected Persona
 
 - **Name & Archetype:** Mara, supplied master toy modeler and mechanical engineer, resuming the existing fidelity review.
@@ -122,7 +124,37 @@ The 30-file fixture before the surrounding studio sweep and coating-scale correc
 - **Persona Critique:** For an ordinary passive wooden bead without hidden adhesive or magnetic support, a generous drilled clearance does not hold it in mid-air.
 - **Acceptance Criterion:** Supported rendered poses with less than 0.1 mm surface separation, no wire/bead/base penetration, preserved counts/weave/spacing, and photography only after corrected poses apply. The unobstructed original block must reach its own wire; an earlier base or neighboring contact must not be crossed to force that result.
 
+#### ISS-5.13 — Plywood normal guide included relief omitted by the tracer
+
+- **Severity:** MEDIUM
+- **Location:** `bead-materials.js`, `photo-guides.js`, pinned tracer material encoder.
+- **Tool Evidence:** The actual pinned encoder returned identical material arrays with a bump map and with it removed; its normal-map slot stayed -1. The plywood supplied that bump map while the raster guide included it. A normal map encoded correctly in slot 16. Jev supported this source/probe compatibility finding at 0.94.
+- **Persona Critique:** The traced surface and denoising guide must describe the same relief.
+- **Acceptance Criterion:** A supported tangent normal map shared by the viewer, tracer and guide; no bump-only plywood relief; material-encoding and guided export checks. Photographic equivalence is separate.
+
+#### ISS-5.14 — Raster and tracer derived different paint tangent frames
+
+- **Severity:** MEDIUM
+- **Location:** Normal-mapped geometry from `bead-geometry.js`.
+- **Tool Evidence:** Returned meshes had no tangent attribute. r160 used its derivative frame, whereas the tracer generated vertex tangents. A CPU probe applying both source formulas to actual painted triangles/map samples found area-weighted mean differences up to 0.385° and maxima up to 4.802°. This measures the formulas, not an independent pixel-level AOV comparison.
+- **Persona Critique:** Paint detail should retain a shared authored basis across the interactive, traced and guide surfaces.
+- **Acceptance Criterion:** Finite orthonormal shared tangents on final bead/board UVs, preserved by actual tracer preparation; unchanged physical geometry and draw groups; fresh guided captures.
+
 ### Fixes
+
+#### FIX-5.14 → ISS-5.14
+
+- **Location:** `bead-geometry.js`, `test/finish-tangents.test.mjs`.
+- **Action Taken:** Compute tangents after final UV mapping, retaining them for raster and tracer use. Re-orthogonalize against the shading direction because r160 lathe join normals need not have unit length. Keep original position/normal buffers, UV handedness and draw groups. Add an identity index to nonindexed board geometry.
+- **Tool Verification:** The actual pinned tracer geometry generator preserves the authored basis through rotation and metre scaling. Tests check finite unit tangents, normal orthogonality and handedness for all five bead forms and a beveled board. Independent existing geometry checks retain unchanged physical bead buffers.
+- **Limit:** Shared authored tangents remove the derivative-versus-computed basis difference. Raster interpolation, multisampling and finite-aperture guide approximation still differ from accumulated traced AOVs; no exact pixel-normal equivalence is claimed.
+
+#### FIX-5.13 → ISS-5.13
+
+- **Location:** `bead-materials.js`, `finish-normals.js`, `paint-finish.js` and the geometry repeat constant.
+- **Action Taken:** Replace plywood's unsupported bump with a tangent normal map from an independently authored shallow relief field, accounting for different horizontal/vertical texel pitches. Replace paint's fine random height/roughness coupling with a smooth periodic millimetre-height field and independent roughness. Keep the 32 mm repeat shared with the geometry. No geometry or support pose changes.
+- **Tool Verification:** The real browser factory and pinned encoder carry both normal maps, unit normal scales and no bump-only maps. Independent numerical tests decode paint normals against physical height slopes, including periodic boundaries. The production 256-sample/OIDN close export completed without browser errors and retained visible paint detail.
+- **Limits:** Paint height RMS is an authored 18.50 μm, not a measured scan. The plywood albedo still repeats a single procedural layer. More visible texture is not proof of photographic equivalence; the close image remains synthetic under ISS-5.01. See [the material research](plywood-fidelity-research.md).
 
 #### FIX-5.12 → ISS-5.12
 
