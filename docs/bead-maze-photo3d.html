@@ -102,8 +102,8 @@
     </div>
     <a class="overlay map-link" href="./codebase-bead-maze.html?map=1">Explore codebase map</a>
     <img id="fallback" src="./bead-maze-view-top.png" alt="Wooden bead maze" />
-    <script src="./vendor/three.min.js"></script>
-    <script>
+    <script type="module">
+      import * as THREE from "./vendor/three.module.js";
       const params = new URLSearchParams(location.search);
       const VIEWS = {
         hero: { file: "bead-maze-view-top", label: "Three-quarter" },

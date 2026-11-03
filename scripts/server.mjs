@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { scanRepository } from "../lib/scan-repository.mjs";
 
 const project = fileURLToPath(new URL("../", import.meta.url));
-const MIME = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json", ".css": "text/css", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml", ".mp4": "video/mp4", ".ico": "image/x-icon" };
+const MIME = { ".html": "text/html", ".htm": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json", ".css": "text/css", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml", ".mp4": "video/mp4", ".md": "text/markdown", ".txt": "text/plain", ".ico": "image/x-icon" };
 
 export function createApp({ repository = project, staticRoot = project } = {}) {
   let scanning = false;
@@ -20,11 +20,13 @@ export function createApp({ repository = project, staticRoot = project } = {}) {
       const host = request.headers.host;
       if (host !== expectedHost && host !== `localhost:${request.socket.localPort}`) return json(response, 403, { error: "Use the local server address." });
       if (request.headers.origin && request.headers.origin !== `http://${host}`) return json(response, 403, { error: "Cross-origin requests are not allowed." });
+      const site = request.headers["sec-fetch-site"];
+      if (site && site !== "same-origin" && site !== "none") return json(response, 403, { error: "Cross-site requests are not allowed." });
       const url = new URL(request.url, `http://${host}`);
       if (url.pathname === "/api/scan") {
         if (!["GET", "POST"].includes(request.method)) return json(response, 405, { error: "Use GET or POST." });
         if (scanning) return json(response, 409, { error: "A scan is already running. Try again when it finishes." });
-        if (request.method === "POST" && request.headers["content-type"]?.split(";")[0] !== "application/json") return json(response, 415, { error: "Send application/json." });
+        if (request.method === "POST" && request.headers["content-type"]?.split(";")[0].trim().toLowerCase() !== "application/json") return json(response, 415, { error: "Send application/json." });
         let input = repository;
         let maxFiles = 600;
         if (request.method === "POST") {
@@ -67,13 +69,20 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   let repository = project;
   let staticRoot = project;
   let port = 3000;
+  const fail = (message) => { console.error(`Server failed: ${message}`); process.exit(1); };
   while (args.length) {
     const arg = args.shift();
-    if (arg === "--port" && args.length) port = Number(args.shift());
+    if (arg === "--port" && args.length) {
+      port = Number(args.shift());
+      if (!Number.isInteger(port) || port < 1 || port > 65535) fail("Port must be an integer between 1 and 65535.");
+    }
     else if (arg === "--directory" && args.length) staticRoot = path.resolve(args.shift());
     else if (!arg.startsWith("--")) repository = arg;
-    else throw new Error(`Unknown or incomplete option: ${arg}`);
+    else fail(`Unknown or incomplete option: ${arg}`);
   }
+  try {
+    if (!(await stat(staticRoot)).isDirectory()) fail(`The static directory is not a directory: ${staticRoot}`);
+  } catch { fail(`The static directory does not exist: ${staticRoot}`); }
   const app = createApp({ repository, staticRoot });
   app.on("error", (error) => { console.error(`Server failed: ${error.message}`); process.exitCode = 1; });
   app.listen(port, "127.0.0.1", () => console.log(`Code Maze: http://localhost:${app.address().port}\nRepository: ${repository}`));

@@ -1,5 +1,7 @@
 import { createMaze, positionGraph } from "./bead-scene.js";
 
+try { window.THREE = await import("./vendor/three.module.js"); } catch { /* the canvas fallback needs no Three.js */ }
+
 const form = document.getElementById("scan-form");
 const pathInput = document.getElementById("repo-path");
 const submit = document.getElementById("scan-button");

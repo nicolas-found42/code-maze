@@ -27,6 +27,15 @@ test("local API scans chosen repos, reports errors, and only serves the app", as
   assert.ok((await bad.json()).error);
   assert.equal((await post(null)).status, 400);
   assert.equal((await post({ path: root }, { Origin: "https://other.example" })).status, 403);
+  assert.equal((await post({ path: root }, { "Content-Type": "Application/JSON; charset=UTF-8" })).status, 200);
+  assert.equal((await post({ path: root }, { "Sec-Fetch-Site": "cross-site" })).status, 403);
+  assert.equal((await post({ path: root }, { "Sec-Fetch-Site": "same-origin" })).status, 200);
+  assert.equal((await fetch(`${base}/api/scan`, { headers: { "Sec-Fetch-Site": "cross-site" } })).status, 403);
+  for (const [file, type] of [
+    ["docs/bead-maze/photos/b87928204344.webp", "image/webp"],
+    ["docs/bead-maze/photos/e1fcf9d1b860.jpeg", "image/jpeg"],
+    ["docs/bead-maze/reference-corpus.md", "text/markdown"],
+  ]) assert.equal((await fetch(`${base}/${file}`)).headers.get("content-type"), type);
   assert.equal((await fetch(`${base}/package.json`)).status, 404);
   assert.equal((await fetch(`${base}/docs/../scripts/server.mjs`)).status, 404);
   const html = await fetch(`${base}/docs/codebase-bead-maze.html`);

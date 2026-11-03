@@ -101,7 +101,7 @@ try {
 
   const fallback = await browser.newPage({ viewport: { width: 390, height: 844 } });
   fallback.on("pageerror", (error) => errors.push(error.message));
-  await fallback.route("**/vendor/three.min.js", (route) => route.fulfill({ contentType: "text/javascript", body: "" }));
+  await fallback.route("**/vendor/three.module.js", (route) => route.fulfill({ contentType: "text/javascript", body: "" }));
   await fallback.goto(base);
   await fallback.waitForFunction(() => document.querySelector("#scene")?.dataset.nodes === "3");
   assert.equal(await fallback.locator("#scene").getAttribute("data-renderer"), "canvas2d");

@@ -9,6 +9,7 @@ export function createCanvasMaze(container, onSelect) {
   function draw() {
     if (!current) return;
     const width = container.clientWidth, height = container.clientHeight;
+    if (!width || !height) return;
     const ratio = Math.min(devicePixelRatio || 1, 2);
     canvas.width = width * ratio; canvas.height = height * ratio;
     canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;

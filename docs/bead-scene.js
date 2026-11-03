@@ -171,6 +171,7 @@ export function createMaze(container, onSelect) {
     invalidate();
   }
   function resize() {
+    if (!container.clientWidth || !container.clientHeight) return;
     renderer.setSize(container.clientWidth, container.clientHeight);
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
@@ -200,7 +201,7 @@ export function createMaze(container, onSelect) {
     if (hit) {
       hoverText.textContent = hit.userData.id;
       const rectangle = canvas.getBoundingClientRect();
-      hoverText.style.left = `${Math.min(event.clientX - rectangle.left + 14, container.clientWidth - 225)}px`;
+      hoverText.style.left = `${Math.max(8, Math.min(event.clientX - rectangle.left + 14, container.clientWidth - hoverText.offsetWidth - 8))}px`;
       hoverText.style.top = `${Math.max(8, event.clientY - rectangle.top - 38)}px`;
     }
     hoverText.hidden = !hit;
