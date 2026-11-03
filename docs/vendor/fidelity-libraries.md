@@ -4,7 +4,7 @@ Discovery and primary-source compatibility evidence are in [the research note](.
 
 | Tool | Pinned version | Use | License copy |
 | --- | --- | --- | --- |
-| [N8AO](https://github.com/N8python/n8ao) | 2.0.1 | Contact occlusion, neural denoising on wide stages, Poisson denoising on narrow stages | n8ao.LICENSE (ISC) |
+| [N8AO](https://github.com/N8python/n8ao) | 2.0.1 | Contact occlusion, neural denoising on wide stages, Poisson denoising on narrow stages | n8ao.LICENSE (CC0 1.0; upstream package metadata says ISC) |
 | [postprocessing](https://github.com/pmndrs/postprocessing) | 6.35.3 | HDR composer, MSAA, final ACES tone mapping and FXAA | postprocessing.LICENSE (Zlib) |
 | [three-bvh-csg](https://github.com/gkjohnson/three-bvh-csg) | 0.0.16 | Authoring-time subtraction of a through-hole from a rounded block | three-bvh-csg.LICENSE (MIT) |
 | [three-mesh-bvh](https://github.com/gkjohnson/three-mesh-bvh) | 0.8.3 | CSG acceleration during baking | three-mesh-bvh.LICENSE (MIT) |
