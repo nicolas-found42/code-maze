@@ -6,7 +6,7 @@ Historical measurements of the fixed photographic companion and its separate pro
 
 The default entry point opens the generated codebase map. **Studio photo** progressively traces that map's actual drilled meshes, materials and camera with diffuse interreflection and rectangular studio lights. The image-based companion below is a separate reference; it does not represent generated files or tracks. No blind photographic equivalence test of the current generated viewer has passed. This remains an open acceptance requirement.
 
-The 30-file fixture before the surrounding studio sweep: [earlier interactive preview](maze-fidelity/studio-preview.jpg) · [converged guided studio photograph](maze-fidelity/studio.png) · [1600-pixel close-up](maze-fidelity/studio-close.png). Modeling, placement and materials also changed, so this is not an isolated denoiser comparison or a blind comparison against a real toy. The photographs use the Apple single-layer finish described in [the tool notes](vendor/fidelity-libraries.md). The photographic suite writes fresh hero, close, low and mobile captures to `.scratch/verification/photographic/`.
+The 30-file fixture before the surrounding studio sweep and coating-scale correction: [earlier interactive preview](maze-fidelity/studio-preview.jpg) · [converged guided studio photograph](maze-fidelity/studio.png) · [1600-pixel close-up](maze-fidelity/studio-close.png). Modeling, placement and materials also changed, so this is not an isolated denoiser comparison or a blind comparison against a real toy. The photographs use the Apple single-layer finish described in [the tool notes](vendor/fidelity-libraries.md). The photographic suite writes fresh hero, close, low and mobile captures to `.scratch/verification/photographic/`.
 
 ## Selected Persona
 
@@ -106,7 +106,22 @@ The 30-file fixture before the surrounding studio sweep: [earlier interactive pr
 - **Persona Critique:** An arbitrary-view product photograph must not reveal a floor/sky cut when the camera orbits lower.
 - **Acceptance Criterion:** Continuous low-angle studio background with actual converged captures, preserved guide alignment, export and cleanup.
 
+#### ISS-5.11 — A shared coating stretched differently across bead forms
+
+- **Severity:** MEDIUM
+- **Location:** `docs/bead-geometry.js`, native shape UVs.
+- **Tool Evidence:** The same 256px paint normal/roughness maps covered normalized shape UVs. Independent painted-triangle area/UV-area measurements gave area-weighted median lengths per repeat of 91.70, 30.38, 114.80, 90.86 and 95.04 mm for sphere, block, barrel, ring and spool. Unequal lathe meridian segments also received equal texture intervals. The new regression failed on the original geometry.
+- **Persona Critique:** One manufactured coating should not change its fine-structure scale by nearly four times between a block and a turned bead.
+- **Acceptance Criterion:** Declare a physical coating repeat, retain closed texture phase around turned forms, preserve geometry/bores/normals and inspect fresh finished captures. This does not imply that the chosen finish is physically measured from a real toy.
+
 ### Fixes
+
+#### FIX-5.11 → ISS-5.11
+
+- **Location:** Bead geometry UVs, finish texture and regression.
+- **Action Taken:** Set a nominal 32 mm coating repeat; map lathe meridians by surface distance and choose whole circumference repeats at the widest ring. Retain the block's chart/bevel layout with a matching scale. Make the faint fibre carrier periodic in both texture axes. Bore timber uses the resulting shared UV chart too; no calibrated wood-grain claim is made.
+- **Tool Verification:** Painted-area weighted median repeat scales are now 28.79–32.41 mm across all five forms, with integer azimuth seams. Positions, normals, triangle indices and material groups are byte-identical to the prior meshes. A fixed-camera 256-sample/OIDN close capture has finer relief; both before and after still read as synthetic. The full photographic requirement remains open.
+
 
 #### FIX-5.10 → ISS-5.10
 

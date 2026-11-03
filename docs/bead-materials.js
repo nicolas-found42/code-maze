@@ -43,7 +43,7 @@ export function createToyMaterials(THREE, renderer, invalidate) {
   const paintContext = paintCanvas.getContext("2d");
   const paintPixels = paintContext.createImageData(256, 256);
   for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) {
-    const fibre = Math.sin(x * 0.58 + Math.sin(y * 0.045) * 1.2) * 6;
+    const fibre = Math.sin(x / 256 * Math.PI * 48 + Math.sin(y / 256 * Math.PI * 4) * 1.2) * 6;
     const value = Math.round(195 + fibre + random() * 35);
     paintPixels.data.set([value, value, value, 255], (y * 256 + x) * 4);
   }

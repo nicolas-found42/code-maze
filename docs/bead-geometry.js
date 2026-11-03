@@ -1,11 +1,24 @@
 import blockData from "./vendor/bead-block.js";
 
+const COATING_REPEAT = 32; // Layout millimetres; one shared fine-finish tile.
+
 // All shapes fit inside the layout's radius-27 clearance envelope. Local +Y is
 // the drill axis, aligned to the track tangent by bead-scene.
 export function createBeadGeometries(THREE) {
   function turned(profile, paintedSegments) {
     const segments = 64;
     const geometry = new THREE.LatheGeometry(profile.map(([x, y]) => new THREE.Vector2(x, y)), segments);
+    // Normalized Lathe UVs stretch the same finish over the entire bead and
+    // give every profile segment equal texture space regardless of its length.
+    // Use meridian distances and a whole number of tiles around the widest
+    // ring, preserving a seamless azimuth with approximately 32 mm repeats.
+    const arc = [0];
+    for (let j = 1; j < profile.length; j++) arc.push(arc[j - 1] + Math.hypot(profile[j][0] - profile[j - 1][0], profile[j][1] - profile[j - 1][1]));
+    const turns = Math.max(1, Math.round(2 * Math.PI * Math.max(...profile.map(point => point[0])) / COATING_REPEAT));
+    const uv = geometry.attributes.uv;
+    for (let i = 0; i <= segments; i++) for (let j = 0; j < profile.length; j++) {
+      uv.setXY(i * profile.length + j, i / segments * turns, arc[j] / COATING_REPEAT);
+    }
     // Partition triangles into two draws: enamel outside, raw timber in the bore.
     const paint = [], timber = [], index = geometry.index.array;
     for (let i = 0; i < segments; i++) for (let j = 0; j < profile.length - 1; j++) {
@@ -47,6 +60,10 @@ export function createBeadGeometries(THREE) {
   const spool = [[8,17],[18,17],[21,16.5],[22,15],[22,12],[21,10],[17,9],[16,7],[16,-7],[17,-9],[21,-10],[22,-12],[22,-15],[21,-16.5],[18,-17],[8,-17],[7,-16],[7,16],[8,17]];
   const block = new THREE.BufferGeometry();
   for (const [name, values] of Object.entries(blockData.attributes)) block.setAttribute(name, new THREE.Float32BufferAttribute(values, name === "uv" ? 2 : 3));
+  // RoundedBoxGeometry's native face tile spans roughly 30 mm. Retain its
+  // chart seams and bevel mapping, with at most 32/30 face aspect variation.
+  const blockUV = block.attributes.uv;
+  for (let i = 0; i < blockUV.count; i++) blockUV.setXY(i, blockUV.getX(i) * 30 / COATING_REPEAT, blockUV.getY(i) * 30 / COATING_REPEAT);
   block.setIndex(blockData.index);
   for (const group of blockData.groups) block.addGroup(group.start, group.count, group.materialIndex);
   return [turned(sphere, 32), block, turned(barrel, 12), ringGeometry, turned(spool, 15)];
