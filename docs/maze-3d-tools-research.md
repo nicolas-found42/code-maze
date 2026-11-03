@@ -2,6 +2,22 @@
 
 Checked 2026-11-03 against upstream source. Recommendation: combine **N8AO contact shading**, **pmndrs/postprocessing**, and **a small library of genuinely bored, softened bead meshes**. Add CSG only to generate shapes that cannot be expressed cleanly with a lathe. This targets the toy's missing contact depth and manufactured edges without changing its plain JavaScript architecture.
 
+## Mapped normal frames — reproduced
+
+This audit uses primary local source from installed Three 0.160.0 and three-gpu-pathtracer 0.0.23, plus the served bundle at `c27db11` (SHA-256 `8afc3c5e2778044c5771badc4eff70a08f8548d2457a77f955f7661d730e68b7`). It does not infer behavior from a current upstream release.
+
+The tracer's `src/materials/pathtracing/glsl/get_surface_record_function.glsl.js` scales normal-map XY and assigns `vTBN * texNormal` without normalization, for both base and clearcoat maps. Its `src/shader/common/math_functions.glsl.js:getBasisFromNormal` normalizes two tangent columns but retains the supplied normal as the third. `src/shader/bsdf/bsdf_functions.glsl.js` later normalizes transformed directions, which cannot undo an unequal axis scale. Three's `ShaderChunk/normal_fragment_maps.glsl.js` instead normalizes `tbn * mapN` before shading.
+
+For an ideal decoded normal `(0.6, 0, 0.8)` and XY strength 0.18, the unnormalized length is 0.807257. A true 45° world direction becomes about 38.91° in the inverse frame, while a 45° local sample becomes about 51.09° in world space. This is a mathematical counterexample, not the typical strength of the actual asset. CPU decoding of all 1,048,576 source wood-normal texels gave median length 0.99218 and minimum 0.96082 after the same scaling; atlas filtering and tangent interpolation can change those values.
+
+The new `scripts/finish-review.mjs` GPU regression compiles the base/clearcoat mapped-normal expressions and basis function extracted from the served bundle. The baseline fails at length 0.807257; the build-time normalization patch passes all ten length/angle controls. This checks the compiled expressions and their composition; it does not substitute for running the full tracer.
+
+Separate full-tracer plane renders use the actual material factory, 480×360 pixels, 128 samples, f/64, three bounces and the production Apple single-layer wood response. Both variants share the exact blue-noise texture as well as reset sample seeds. Repeated wood runs are byte-identical within each variant. Across the entire image's linear RGB channels, the wood RMS difference is 0.000313689 and neutral-control RMS is 0.000000518; the maximum wood difference is 0.00618497. These numbers measure a bounded image change, not improved photographic similarity. RGB8 normal quantization also means the nonflat unit-strength control is not an exact unit vector.
+
+The initial comparison reset only the sample seed. Source inspection of `StratifiedSamplesTexture.js`, `textures/BlueNoiseTexture.js` and `textures/blueNoise/BlueNoiseGenerator.js` showed that `stableNoise` does not freeze the newly constructed blue-noise offset texture. Its neutral-control RMS was 0.00405787, so those cross-context differences were rejected. Keeping that failed control prevents attributing random sample changes to the shader patch.
+
+The repair is applied during `npm run assets:3d`, with strict single-site guards for both assignments and no dependency edits. Actual wood appearance changes subtly; no full photographic-equivalence or Apple layered-clearcoat claim follows from this repair.
+
 ## Discovery provenance
 
 [AxiomeCG/awesome-threejs](https://github.com/AxiomeCG/awesome-threejs#tools) lists three-mesh-bvh and three-bvh-csg, plus the React and Svelte postprocessing wrappers; its resources also list ambientCG PBR textures. Following those projects leads to the vanilla postprocessing library and its N8AO integration. [Pico's awesome-webxr-development](https://github.com/Pico-Developer/awesome-webxr-development) independently lists realism-effects. An awesome listing is discovery evidence, not proof of performance or adoption.

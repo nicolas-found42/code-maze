@@ -2,6 +2,7 @@ import { build } from "esbuild";
 import { cp, readFile } from "node:fs/promises";
 import { REVISION } from "three";
 import { createHash } from "node:crypto";
+import { normalizeMappedNormals } from "./pathtracer-normal-compat.mjs";
 
 const core = await readFile("docs/vendor/three.module.js", "utf8");
 if (!core.includes(`const REVISION = "${REVISION}";`) && !core.includes(`const REVISION = '${REVISION}';`)) {
@@ -53,6 +54,9 @@ await build({
   outfile: "docs/vendor/pathtracer.js",
   plugins: [{ name: "shared-three", setup(builder) {
     builder.onResolve({ filter: /^three$/ }, () => ({ path: "./three.module.js", external: true }));
+    builder.onLoad({ filter: /get_surface_record_function\.glsl\.js$/ }, async ({ path }) => ({
+      contents: normalizeMappedNormals(await readFile(path, "utf8")), loader: "js",
+    }));
   } }],
 });
 await cp("node_modules/three-gpu-pathtracer/LICENSE", "docs/vendor/three-gpu-pathtracer.LICENSE");

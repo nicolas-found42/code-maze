@@ -164,7 +164,22 @@ The [paint-finish close capture at 50c57a2](maze-fidelity/paint-finish-close.png
 - **Persona Critique:** Smooth shading does not repair a polygonal silhouette at the close viewing distances available in the viewer.
 - **Acceptance Criterion:** Round the painted outline within its clearance envelope, retain the original bore/lip dimensions and material boundary, and verify shared UV/tangents, actual contacts and generated photographs.
 
+#### ISS-5.18 — Mapped normals produced a nonunit BRDF frame
+
+- **Severity:** LOW
+- **Location:** The pinned tracer's base/clearcoat normal-map paths and asset builder.
+- **Tool Evidence:** The served shader scaled mapped-normal XY but did not normalize the result before building a frame with unit tangent columns. Later direction normalization did not undo that unequal axis scale. A GPU reproduction using the actual served expressions returned length 0.807257 and local/sample cosines 0.778107/0.628132 for a nominal 45° control, instead of unit length and cosine 0.707107. The new finish regression failed on the original bundle.
+- **Persona Critique:** Normal strength and filtered texture length must not distort the material's reflection/sampling frame.
+- **Acceptance Criterion:** Reproducible build-time normalization of both mapped normals, served-expression GPU controls for unit frames and preserved angles, matched actual-material renders, and current rendering/lifecycle checks. Full photographic equivalence remains separate.
+
 ### Fixes
+
+#### FIX-5.18 → ISS-5.18
+
+- **Location:** `scripts/pathtracer-normal-compat.mjs`, asset builder, served tracer and finish regression.
+- **Action Taken:** Normalize each mapped normal after its tangent transform. Patch the pinned source while bundling; reject missing or duplicate assignment sites so an upstream change cannot silently skip the repair. Keep authored normal strengths, geometry, dependencies and the Apple clearcoat workaround unchanged.
+- **Tool Verification:** The actual served base/clearcoat expressions and basis compile on the GPU. Five controls per path now return unit length and the expected 45° cosines, including neutral/unit-strength controls, a filtered nonunit normal and a nonorthogonal tangent input. Matched 128-sample full-tracer material renders share the same blue-noise texture and reset seed; repeated wood renders are byte-identical. The actual wood crop changes subtly: whole-image linear RGB RMS difference 0.000314, versus 0.000000518 for the neutral control. Full revision-bound checks remain recorded in the ledger.
+- **Limits:** The first image comparison used independent randomized blue-noise maps despite stable sample seeds; those differences were rejected and archived. The corrected specimen is a single-layer material plane at f/64 without OIDN, not a whole generated maze or a measured photographic target. This repairs shading math; it does not establish photographic equivalence or fix the separate Apple layered-clearcoat defect. See [the source and control audit](maze-3d-tools-research.md#mapped-normal-frames--reproduced).
 
 #### FIX-5.17 → ISS-5.17
 

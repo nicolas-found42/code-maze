@@ -3346,7 +3346,7 @@ bool bvhIntersectFogVolumeHit(
 				vec3 uvPrime = material.normalMapTransform * vec3( uv, 1 );
 				vec3 texNormal = texture2D( textures, vec3( uvPrime.xy, material.normalMap ) ).xyz * 2.0 - 1.0;
 				texNormal.xy *= material.normalScale;
-				normal = vTBN * texNormal;
+				normal = normalize( vTBN * texNormal );
 
 			}
 
@@ -3394,7 +3394,7 @@ bool bvhIntersectFogVolumeHit(
 				vec3 uvPrime = material.clearcoatNormalMapTransform * vec3( uv, 1 );
 				vec3 texNormal = texture2D( textures, vec3( uvPrime.xy, material.clearcoatNormalMap ) ).xyz * 2.0 - 1.0;
 				texNormal.xy *= material.clearcoatNormalScale;
-				clearcoatNormal = vTBN * texNormal;
+				clearcoatNormal = normalize( vTBN * texNormal );
 
 			}
 

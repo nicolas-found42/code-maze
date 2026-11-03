@@ -67,6 +67,52 @@ try {
         for (let c = 0; c < 3; c++) { maximum = Math.max(maximum, Math.abs(pixels[offset + c] - pixels[offset + 4 + c])); maximumColor = Math.max(maximumColor, pixels[offset + c]); }
       }
       result.border = { maximum, minimumAlpha, maximumColor };
+
+      // Compile the served mapped-normal expressions and basis function on the
+      // GPU. Direction normalization after a nonunit basis does not repair its
+      // angular distortion. Include neutral/unit-strength controls, a filtered
+      // nonunit normal, and an interpolated nonorthogonal tangent frame.
+      const source = await (await fetch("./vendor/pathtracer.js")).text();
+      const basis = source.match(/mat3 getBasisFromNormal\( vec3 normal \) \{[\s\S]*?\n\t\}/)?.[0];
+      if (!basis) throw new Error("Served tracer normal-basis function not found");
+      const frameTarget = new THREE.WebGLRenderTarget(5, 1, { type: THREE.FloatType });
+      result.normalFrames = [];
+      try {
+        for (const slot of ["normal", "clearcoatNormal"]) {
+          const expressions = source.match(new RegExp(`\\b${slot} = (?:normalize\\(\\s*)?vTBN \\* texNormal(?:\\s*\\))?;`, "g"));
+          if (expressions?.length !== 1) throw new Error(`Ambiguous served ${slot} expression`);
+          const frameShader = new THREE.RawShaderMaterial({ glslVersion: THREE.GLSL3,
+            vertexShader: "precision highp float;in vec3 position;void main(){gl_Position=vec4(position.xy,0.,1.);}",
+            fragmentShader: `precision highp float;out vec4 color;
+              ${basis}
+              void main(){
+                int probe=int(gl_FragCoord.x);
+                vec3 normal=vec3(0.,0.,1.);vec3 clearcoatNormal=normal;
+                vec3 tangent=probe==4?normalize(vec3(1.,0.,.1)):vec3(1.,0.,0.);
+                vec3 bitangent=normalize(cross(normal,tangent));
+                mat3 vTBN=mat3(tangent,bitangent,normal);
+                vec3 texNormal=probe==2?vec3(0.,0.,1.):probe==3?vec3(.2,.3,.8):vec3(.6,0.,.8);
+                texNormal.xy*=probe==0||probe==2?.18:1.;
+                ${expressions[0]}
+                vec3 mapped=${slot},unitNormal=normalize(mapped);
+                mat3 frame=getBasisFromNormal(mapped);
+                vec3 world45=normalize(frame[0]+unitNormal);
+                vec3 local45=normalize(inverse(frame)*world45);
+                vec3 sample45=normalize(frame*normalize(vec3(1.,0.,1.)));
+                color=vec4(length(mapped),local45.z,dot(sample45,unitNormal),1.);
+              }`,
+          });
+          try {
+            quad.material = frameShader;
+            renderer.setRenderTarget(frameTarget); quad.render(renderer);
+            const values = new Float32Array(20);
+            renderer.readRenderTargetPixels(frameTarget, 0, 0, 5, 1, values);
+            result.normalFrames.push({ slot, samples: Array.from({ length: 5 }, (_, i) => [...values.slice(i * 4, i * 4 + 4)]) });
+          } finally {
+            quad.material = shader; frameShader.dispose();
+          }
+        }
+      } finally { frameTarget.dispose(); }
     } finally {
       shader.dispose(); quad.dispose(); target.dispose(); packed.fsQuad.material.dispose(); packed.dispose();
       renderer.dispose(); renderer.forceContextLoss();
@@ -75,7 +121,7 @@ try {
     return result;
   });
   for (const [name, finish] of Object.entries(observed)) {
-    if (name === "border") continue;
+    if (name === "border" || name === "normalFrames") continue;
     assert.equal(finish.normalIndex, 0, `${name} relief reaches the actual tracer`);
     assert.deepEqual(finish.normalScale, [1, 1]);
     assert.equal(finish.bump, false);
@@ -86,6 +132,13 @@ try {
   assert.equal(observed.border.minimumAlpha, 255, "probe actually draws every sample");
   assert.ok(observed.border.maximumColor > 50, "probe is not a black placeholder");
   assert.ok(observed.border.maximum <= 1, "packed-array/source border sampling differs beyond8bit quantization");
+  console.log("Actual GPU served-shader normal frames:", JSON.stringify(observed.normalFrames));
+  for (const { slot, samples } of observed.normalFrames) for (const [length, localCosine, sampledCosine, alpha] of samples) {
+    assert.equal(alpha, 1, `${slot} probe actually draws`);
+    assert.ok(Math.abs(length - 1) < 1e-5, `${slot} mapped normal must be unit length before the BRDF basis: ${length}`);
+    assert.ok(Math.abs(localCosine - Math.SQRT1_2) < 1e-5, `${slot} inverse basis preserves a45degree world direction`);
+    assert.ok(Math.abs(sampledCosine - Math.SQRT1_2) < 1e-5, `${slot} basis preserves a45degree sampled direction`);
+  }
   assert.deepEqual(errors, []);
   console.log("Browser material → pinned tracer normal encoding:", JSON.stringify(observed));
 } finally {
