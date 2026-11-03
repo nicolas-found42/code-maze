@@ -9,10 +9,10 @@ export function createToyMaterials(THREE, renderer, invalidate) {
     return texture;
   }
   const wood = new THREE.MeshPhysicalMaterial({
-    map: load("ash_veneer_diff_1k.jpg", true),
-    normalMap: load("ash_veneer_nor_gl_1k.jpg"), normalScale: new THREE.Vector2(0.18, 0.18),
-    roughnessMap: load("ash_veneer_rough_1k.jpg"),
-    color: 0xd1ad7d, roughness: 0.72, clearcoat: 0.18, clearcoatRoughness: 0.38, envMapIntensity: 0.45,
+    map: load("white_maple_veneer_diff_1k.jpg", true),
+    normalMap: load("white_maple_veneer_nor_gl_1k.jpg"), normalScale: new THREE.Vector2(0.18, 0.18),
+    roughnessMap: load("white_maple_veneer_rough_1k.jpg"),
+    color: 0xfff5e5, roughness: 0.66, clearcoat: 0.18, clearcoatRoughness: 0.38, envMapIntensity: 0.45,
   });
   // One repeating tile is one veneer; varying layers are mapped in world units.
   const plyCanvas = document.createElement("canvas");
@@ -49,6 +49,19 @@ export function createToyMaterials(THREE, renderer, invalidate) {
   const paintTexture = new THREE.CanvasTexture(paintCanvas);
   paintTexture.wrapS = paintTexture.wrapT = THREE.RepeatWrapping;
   paintTexture.anisotropy = anisotropy;
+  const normalCanvas = document.createElement("canvas");
+  normalCanvas.width = normalCanvas.height = 256;
+  const normalContext = normalCanvas.getContext("2d");
+  const normalPixels = normalContext.createImageData(256, 256);
+  const height = (x, y) => paintPixels.data[(((y + 256) % 256) * 256 + (x + 256) % 256) * 4] / 255;
+  for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) {
+    const normal = new THREE.Vector3((height(x - 1, y) - height(x + 1, y)) * 0.6, (height(x, y - 1) - height(x, y + 1)) * 0.6, 1).normalize();
+    normalPixels.data.set([Math.round((normal.x + 1) * 127.5), Math.round((normal.y + 1) * 127.5), Math.round((normal.z + 1) * 127.5), 255], (y * 256 + x) * 4);
+  }
+  normalContext.putImageData(normalPixels, 0, 0);
+  const paintNormal = new THREE.CanvasTexture(normalCanvas);
+  paintNormal.wrapS = paintNormal.wrapT = THREE.RepeatWrapping;
+  paintNormal.anisotropy = anisotropy;
   const boreMap = load("fine_grained_wood_col_1k.jpg", true);
   const bore = new THREE.MeshStandardMaterial({ color: 0xc49b67, map: boreMap, roughness: 0.78 });
   return {
@@ -56,7 +69,7 @@ export function createToyMaterials(THREE, renderer, invalidate) {
     bead(color) {
       return [new THREE.MeshPhysicalMaterial({ color, roughness: 0.58, metalness: 0,
         clearcoat: 0.24, clearcoatRoughness: 0.3, envMapIntensity: 0.55,
-        bumpMap: paintTexture, bumpScale: 0.025, roughnessMap: paintTexture }), bore.clone()];
+        normalMap: paintNormal, normalScale: new THREE.Vector2(0.4, 0.4), roughnessMap: paintTexture }), bore.clone()];
     },
     wire(color) { return new THREE.MeshPhysicalMaterial({ color, roughness: 0.29, metalness: 0.05,
       clearcoat: 0.45, clearcoatRoughness: 0.22, envMapIntensity: 0.35 }); },

@@ -21,6 +21,7 @@ OUT = os.path.join(ROOT, "docs", "bead-maze-render.png")
 
 BASE_TOP = 0.022
 WIRE_R = 0.0042
+BORE_R = 0.0065
 PALETTE = [
     (0.78, 0.13, 0.10, 1),
     (0.93, 0.55, 0.04, 1),
@@ -435,7 +436,7 @@ def sampled(fn, n=180):
     return [fn(i / n) for i in range(n + 1)]
 
 
-def bore(obj, hole_radius=0.0042, bevel=0.0007):
+def bore(obj, hole_radius=BORE_R, bevel=0.0007):
     bpy.context.view_layer.objects.active = obj
     bpy.ops.mesh.primitive_cylinder_add(radius=hole_radius, depth=0.09, vertices=48)
     hole = bpy.context.object
@@ -505,6 +506,13 @@ def bead(kind, mat):
             pre.width = 0.0022
             pre.segments = 3
             bpy.ops.object.modifier_apply(modifier=pre.name)
+        elif kind == "cylinder":
+            bpy.ops.mesh.primitive_cylinder_add(vertices=64, radius=0.0148, depth=0.026)
+            obj = bpy.context.object
+            pre = obj.modifiers.new("soft", "BEVEL")
+            pre.width = 0.0015
+            pre.segments = 4
+            bpy.ops.object.modifier_apply(modifier=pre.name)
         elif kind == "star":
             obj = star_mesh()
             pre = obj.modifiers.new("soft", "BEVEL")
@@ -518,8 +526,19 @@ def bead(kind, mat):
     smooth(obj)
     obj.data.materials.clear()
     obj.data.materials.append(mat)
+    timber = bpy.data.materials.get("DrilledTimber")
+    if timber is None:
+        timber = material("DrilledTimber", (0.72, 0.53, 0.32), 0.74)
+        grain = timber.node_tree.nodes.new("ShaderNodeTexImage")
+        grain.image = bpy.data.images.load(os.path.join(VENDOR, "fine_grained_wood_col_1k.jpg"))
+        grain.projection = "BOX"
+        grain.projection_blend = 0.2
+        timber.node_tree.links.new(grain.outputs["Color"], timber.node_tree.nodes["Principled BSDF"].inputs["Base Color"])
+    obj.data.materials.append(timber)
     for poly in obj.data.polygons:
-        poly.material_index = 0
+        # Boolean walls retain a bare drill surface, including the inner toroid.
+        radius = max(math.hypot(obj.data.vertices[i].co.x, obj.data.vertices[i].co.y) for i in poly.vertices)
+        poly.material_index = int(radius < BORE_R + 0.0008 and abs(poly.normal.z) < 0.8)
     return obj
 
 

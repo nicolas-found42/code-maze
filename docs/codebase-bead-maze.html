@@ -36,10 +36,11 @@
       <main id="playground" tabindex="-1" class="content">
         <div class="maze-column">
           <section class="stage" aria-labelledby="repo-name">
-            <div class="stage-header"><div class="stage-title"><span class="live-dot" aria-hidden="true"></span><div><h2 id="repo-name">Your code world</h2><div id="summary">Waiting for a map</div></div></div><div class="scene-controls"><label><input id="show-labels" type="checkbox" checked /> File names</label><button id="reset-view" type="button"><span aria-hidden="true">↺</span> Reset view</button></div></div>
+            <div class="stage-header"><div class="stage-title"><span class="live-dot" aria-hidden="true"></span><div><h2 id="repo-name">Your code world</h2><div id="summary">Waiting for a map</div></div></div><div class="scene-controls"><label><input id="show-labels" type="checkbox" checked /> File names</label><button id="studio-photo" type="button" aria-pressed="false">Studio photo</button><button id="save-photo" type="button" hidden>Save photo</button><button id="reset-view" type="button"><span aria-hidden="true">↺</span> Reset view</button></div></div>
             <div id="mobile-tour" hidden><p id="mobile-tour-heading"></p><p id="mobile-tour-body"></p><div><button id="mobile-tour-next" class="dark-button" type="button"></button><button id="end-tour" type="button">End tour</button></div></div>
             <div class="scene-wrap"><div id="scene" aria-describedby="scene-help"></div><span class="scene-sticker" aria-hidden="true">GO ON, GIVE IT A SPIN <span>↻</span></span></div>
             <div class="scene-footer"><p id="scene-help"><span aria-hidden="true">✥</span> Drag to spin <b>·</b> Scroll to zoom <b>·</b> Pick a bead</p><p class="keyboard-hint">Keyboard: arrows spin · + / − zoom · 0 resets</p></div>
+            <p id="photo-status" role="status" aria-live="polite"></p>
             <div id="legend" aria-label="Directory groups"></div>
           </section>
           <div class="reference-key"><span><i class="gold-arrow" aria-hidden="true">↗</i> Gold: this file uses another</span><span><i class="blue-arrow" aria-hidden="true">↙</i> Blue: another file uses this one</span></div>

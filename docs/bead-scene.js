@@ -3,6 +3,7 @@ import { motion } from "./playground-motion.js";
 import { createBeadGeometries, mapBoardUVs } from "./bead-geometry.js";
 import { createToyMaterials } from "./bead-materials.js";
 import { createStudioRendering } from "./bead-rendering.js";
+import { createPhotograph } from "./bead-photograph.js";
 export { positionGraph } from "./bead-layout.js";
 
 export function createMaze(container, onSelect) {
@@ -70,7 +71,11 @@ export function createMaze(container, onSelect) {
   const toyMaterials = createToyMaterials(THREE, renderer, invalidate);
   const { wood, ply } = toyMaterials;
   const sharedGeometry = createBeadGeometries(THREE);
-  let studio;
+  let studio, photograph;
+  photograph = createPhotograph(THREE, container, camera, () => content, () => {
+    stopEffects();
+    for (const mesh of meshes) mesh.scale.setScalar(1);
+  });
   container.dataset.shading = "direct";
   createStudioRendering(THREE, renderer, scene, camera, container, invalidate).then((next) => {
     studio = next;
@@ -136,6 +141,7 @@ export function createMaze(container, onSelect) {
     direction.set(Math.sin(phi) * Math.sin(theta), Math.cos(phi), Math.sin(phi) * Math.cos(theta));
     camera.position.copy(target).addScaledVector(direction, radius * zoom);
     camera.lookAt(target);
+    photograph?.cameraChanged();
   }
   function fit() {
     if (!bounds) return;
@@ -177,6 +183,7 @@ export function createMaze(container, onSelect) {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
     fit(); invalidate();
+    photograph?.resize();
   }
   new ResizeObserver(resize).observe(container);
   function hitAt(event) {
@@ -280,6 +287,7 @@ export function createMaze(container, onSelect) {
   resize();
   return {
     setGraph(next) {
+      photograph.close();
       stopEffects();
       if (content) { scene.remove(content); dispose(content); }
       dispose(referenceLayer);
@@ -346,6 +354,7 @@ export function createMaze(container, onSelect) {
       });
     },
     select(id) {
+      photograph.close();
       stopEffects();
       selected = id; halo.visible = Boolean(id);
       const neighbors = new Set([id]);

@@ -81,6 +81,7 @@ function showGraph(data) {
   const flatView = scene.dataset.renderer === "canvas2d";
   document.querySelector(".scene-sticker").hidden = flatView;
   document.getElementById("reset-view").hidden = flatView;
+  document.getElementById("studio-photo").hidden = flatView;
   document.getElementById("scene-help").textContent = flatView ? "Flat view · Tap a bead or choose a file from the list" : "✥ Drag to spin · Scroll to zoom · Pick a bead";
   document.querySelector(".keyboard-hint").textContent = flatView ? "Keyboard: use Tab and Enter to choose a file below" : "Keyboard: arrows spin · + / − zoom · 0 resets";
   pathInput.value = graph.repository.root;

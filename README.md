@@ -27,6 +27,8 @@ The toy uses five drilled bead shapes, including a rounded block baked with BVH 
 
 Compare the same fixture and camera: [before](docs/maze-fidelity/before.jpg) · [after](docs/maze-fidelity/after.jpg).
 
+Choose **Studio photo** to photograph your generated maze with progressive path tracing, soft studio lights and indirect color bounce. Drag or zoom to choose an angle; the interactive map appears while the new view refines. **Save photo** downloads the current image as a PNG. Selection or a new scan returns to the map and releases the photo renderer. The image refines to 256 samples, pauses in hidden tabs, and uses a separate, bounded WebGL context. Apple GPUs use a single-layer enamel finish to avoid an upstream black-clearcoat defect. This improves generated rendering; photographic indistinguishability remains unverified.
+
 The server binds to `127.0.0.1`. Scanning reads files locally and does not execute repository code or send source to a service. Only map metadata is returned to the browser; source text stays out of the graph.
 
 ## Save and export a map
@@ -76,6 +78,7 @@ npm run build
 npm run smoke
 npm run test:ui
 npm run test:fidelity
+npm run test:studio
 ```
 
 The tests cover module resolution, nested ignore rules, non-JavaScript references, cycles, limits, missing paths, and API behavior. Layout tests check that every bead is threaded onto an anchored track and that beads have physical clearance. Independent checks derived from the generated vertices verify that corkscrews thread tall-loop openings and low winding paths pass beneath both other track types.
