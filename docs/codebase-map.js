@@ -1,4 +1,6 @@
 import { createMaze, positionGraph } from "./bead-scene.js";
+import { motion, revealPlayground } from "./playground-motion.js";
+import { createDiscoveryGuide } from "./discovery-guide.js";
 
 try { window.THREE = await import("./vendor/three.module.js"); } catch { /* the canvas fallback needs no Three.js */ }
 
@@ -12,6 +14,9 @@ const scene = document.getElementById("scene");
 let graph;
 let selected;
 let maze;
+let detailTransition;
+const guide = createDiscoveryGuide(selectFile);
+revealPlayground();
 
 function fileButton(id) {
   const button = document.createElement("button");
@@ -27,25 +32,37 @@ function renderFiles() {
   const nodes = graph.nodes.filter((node) => node.id.toLowerCase().includes(query));
   list.replaceChildren(...nodes.map((node) => fileButton(node.id)));
   document.getElementById("file-count").textContent = `${nodes.length} of ${graph.nodes.length} files`;
+  document.getElementById("empty-search").hidden = nodes.length > 0 || graph.nodes.length === 0;
 }
-function selectFile(id) {
+function selectFile(id, guided = false) {
   const node = graph.nodes.find((item) => item.id === id);
   if (!node) return;
   selected = id;
+  if (!guided) guide.onManualSelection();
   maze.select(id);
   document.getElementById("detail-meta").textContent = node.path;
   document.getElementById("detail-body").textContent = `${node.group} · ${node.language} · ${node.lines} lines · ${node.bytes.toLocaleString()} bytes`;
   const connections = document.getElementById("connections");
   connections.replaceChildren();
-  for (const [label, edges, key] of [
-    ["References", graph.edges.filter((edge) => edge.source === id), "target"],
-    ["Referenced by", graph.edges.filter((edge) => edge.target === id), "source"],
+  const outgoing = graph.edges.filter((edge) => edge.source === id);
+  const incoming = graph.edges.filter((edge) => edge.target === id);
+  document.getElementById("detail-story").textContent = outgoing.length || incoming.length
+    ? `This file uses ${outgoing.length} ${outgoing.length === 1 ? "file" : "files"}. ${incoming.length} ${incoming.length === 1 ? "file uses" : "files use"} this one.`
+    : "A solo bead! No references to other files were found. It still belongs in your project.";
+  for (const [label, edges, key, explanation] of [
+    ["References", outgoing, "target", "Gold arrows → files this one uses"],
+    ["Referenced by", incoming, "source", "Blue arrows ← files that use this one"],
   ]) {
     const heading = document.createElement("h3");
     heading.textContent = `${label} (${edges.length})`;
-    connections.append(heading, ...edges.map((edge) => fileButton(edge[key])));
+    const note = document.createElement("p");
+    note.className = "connection-note";
+    note.textContent = edges.length ? explanation : "No references found in this direction.";
+    connections.append(heading, note, ...edges.map((edge) => fileButton(edge[key])));
   }
   for (const button of list.querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.file === id));
+  detailTransition?.revert();
+  detailTransition = motion.animate(document.getElementById("detail-content"), { x: [8, 0], duration: 350, ease: "out(3)" });
 }
 
 function validateGraph(data) {
@@ -61,6 +78,11 @@ function showGraph(data) {
   if (!maze) maze = createMaze(scene, selectFile);
   maze.setGraph(positionGraph(graph));
   maze.setLabels(document.getElementById("show-labels").checked);
+  const flatView = scene.dataset.renderer === "canvas2d";
+  document.querySelector(".scene-sticker").hidden = flatView;
+  document.getElementById("reset-view").hidden = flatView;
+  document.getElementById("scene-help").textContent = flatView ? "Flat view · Tap a bead or choose a file from the list" : "✥ Drag to spin · Scroll to zoom · Pick a bead";
+  document.querySelector(".keyboard-hint").textContent = flatView ? "Keyboard: use Tab and Enter to choose a file below" : "Keyboard: arrows spin · + / − zoom · 0 resets";
   pathInput.value = graph.repository.root;
   document.getElementById("repo-name").textContent = graph.repository.name;
   document.getElementById("summary").textContent = `${graph.nodes.length} files · ${graph.edges.length} relationships · ${graph.groups.length} directory groups`;
@@ -77,11 +99,14 @@ function showGraph(data) {
     const item = document.createElement("li"); item.textContent = warning; return item;
   }));
   document.getElementById("scan-notes").hidden = !graph.warnings.length;
-  document.getElementById("detail-meta").textContent = "Select a bead or file.";
-  document.getElementById("detail-body").textContent = "Its incoming and outgoing relationships appear here.";
+  document.getElementById("warning-count").textContent = `(${graph.warnings.length} ${graph.warnings.length === 1 ? "note" : "notes"})`;
+  document.getElementById("detail-meta").textContent = graph.nodes.length ? "What will you discover?" : "No beads here yet.";
+  document.getElementById("detail-body").textContent = graph.nodes.length ? "Tap a bead in the maze or choose a file below. Its story will appear here." : "Try a folder with code, documentation, or configuration files.";
+  document.getElementById("detail-story").textContent = "";
   document.getElementById("connections").replaceChildren();
   search.value = "";
   renderFiles();
+  guide.setGraph(graph);
   status.textContent = graph.nodes.length ? `Mapped ${graph.repository.name}.` : "No supported text or source files found in this folder.";
 }
 
@@ -105,6 +130,7 @@ async function scan(input) {
 }
 form.addEventListener("submit", (event) => { event.preventDefault(); scan(pathInput.value); });
 search.addEventListener("input", () => { if (graph) renderFiles(); });
+document.getElementById("clear-search").addEventListener("click", () => { search.value = ""; renderFiles(); search.focus(); });
 document.getElementById("show-labels").addEventListener("change", (event) => maze?.setLabels(event.target.checked));
 document.getElementById("reset-view").addEventListener("click", () => maze?.resetView());
 if (document.body.dataset.source === "snapshot") {
@@ -114,6 +140,7 @@ if (document.body.dataset.source === "snapshot") {
     const response = await fetch("./repository-map.json");
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     showGraph(await response.json());
+    status.dataset.state = "ready";
     status.textContent += " Saved snapshot. Run npm start locally to scan another repository.";
   } catch (error) { status.textContent = `Cannot load the saved map: ${error.message}`; status.dataset.state = "error"; }
 } else { await scan(); }

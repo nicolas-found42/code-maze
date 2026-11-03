@@ -19,6 +19,8 @@ npm start -- /absolute/path/to/repository
 
 Drag to orbit, scroll to zoom, and hover over a bead for its full path. Focus the maze and use arrow keys to orbit, plus and minus to zoom, or zero to reset. Select a bead to inspect its file. Use **File names** to toggle labels and **Reset view** to frame the entire toy again. You can also filter the file list and select files with the keyboard. Selecting a file adds a gold halo and a full-path label. Dashed gold arrows show outgoing references, and blue arrows show incoming references. Solid directory tracks are physical supports, not dependency edges.
 
+Choose **Show me how** for a three-step discovery through a real file reference. The guide explains the same connection from both ends, with instructions beside the maze on small screens. The **Motion** button turns the playground effects on or off and remembers your choice. Device reduced-motion settings take priority. Anime.js 4 animates entrances, beads, and reference lights; canvas-confetti celebrates completing the discovery. Both ship locally with the static viewer. [Library versions and licenses](docs/vendor/playground-libraries.md) are recorded with the assets.
+
 The maze mixes tall upright loops, compact corkscrews, and low winding paths around a shared core. Differently angled loops surround corkscrew coils, and winding tracks cross beneath both. Placement requires the corkscrews to pass through loop openings while preserving clearance for beads and wires. Large directories are split across tracks with at most 18 files each. Larger maps use neighboring sections of up to 12 mixed tracks on the same wooden base. Beads stay threaded along their tracks, and crossings stay separate in depth.
 
 The server binds to `127.0.0.1`. Scanning reads files locally and does not execute repository code or send source to a service. Only map metadata is returned to the browser; source text stays out of the graph.
@@ -68,11 +70,14 @@ Nested `.gitignore` rules are honored. Hidden paths except `.github`, dependency
 npm test
 npm run build
 npm run smoke
+npm run test:ui
 ```
 
 The tests cover module resolution, nested ignore rules, non-JavaScript references, cycles, limits, missing paths, and API behavior. Layout tests check that every bead is threaded onto an anchored track and that beads have physical clearance. Independent checks derived from the generated vertices verify that corkscrews thread tall-loop openings and low winding paths pass beneath both other track types.
 
 The browser smoke check uses installed Google Chrome. It covers generated WebGL rendering, direct bead hover and picking, selection labels, label toggling, reset, search, failed scans, rescanning, mobile canvas fallback, and the static export. Screenshots go to `.scratch/verification/`. To use Playwright's Chromium instead, run `npx playwright install chromium` and then `BROWSER_CHANNEL=chromium npm run smoke`.
+
+The UI review also uses Chrome (or `BROWSER_CHANNEL=chromium`). It exercises the guided discovery, keyboard navigation, empty searches, responsive layouts, live reduced-motion preferences, empty and disconnected maps, self-references, and missing effect libraries. Axe checks WCAG A/AA rules in desktop, selected, mobile-tour, and fallback states.
 
 The active implementation lives in:
 
@@ -83,6 +88,9 @@ The active implementation lives in:
 - `docs/bead-layout.js`: continuous directory tracks, bead spacing, positions, and tangents.
 - `docs/bead-scene.js`: Three.js rendering, camera fitting, labels, picking, and reference highlights.
 - `docs/bead-fallback.js`: canvas fallback using the same graph.
+- `docs/discovery-guide.js`: the three-step reference discovery and mobile instructions.
+- `docs/playground-motion.js`: optional effects and motion preferences.
+- `docs/playground.css`: responsive playground presentation.
 
 ## Original bead maze material
 

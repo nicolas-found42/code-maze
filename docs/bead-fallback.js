@@ -14,7 +14,7 @@ export function createCanvasMaze(container, onSelect) {
     canvas.width = width * ratio; canvas.height = height * ratio;
     canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
     context.scale(ratio, ratio);
-    context.fillStyle = "#f0e9dd"; context.fillRect(0, 0, width, height);
+    context.fillStyle = "#f6f3fc"; context.fillRect(0, 0, width, height);
     const raw = (x, y, z) => [x * 0.88 - z * 0.35, z * 0.38 + x * 0.14 - y * 0.85];
     const corners = [];
     for (const x of [-current.width / 2, current.width / 2]) for (const z of [-current.depth / 2, current.depth / 2]) corners.push(raw(x, 0, z));

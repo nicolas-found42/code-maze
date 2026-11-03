@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='utf-8'?>
+<persona_review scope="UI only" date="2026-11-03">
+  <selected_persona>
+Name &amp; Archetype: Milo, age 10, a curious builder and picky first-time code explorer. Persona specified by the user.
+Environment &amp; Constraints: Small laptop and 390px phone; keyboard navigation; reduced-motion preference; slow or unavailable optional effects.
+Picky Obsessions: Unexplained code words, tiny controls, dull styling, lost instructions, and motion that obscures meaning.
+Tool Attack Plan: jg and direct source inspection; Playwright screenshots, interaction and boundary probes; axe WCAG A/AA checks; npm tests, build, smoke and audit; GitHub awesome-list research; Jev brainstorming, bounded decision and final gate.
+</selected_persona>
+  <iteration number="1">
+    <adversarial_review>
+- [ISS-1.01] [Severity: MEDIUM] [Location: docs/codebase-bead-maze.html, lede and hints]
+  Tool Evidence: Baseline Playwright screenshot .scratch/review/before-desktop.png and full HTML read show dense reference terminology with no separate visual key for beads, tracks, and arrows.
+  Critique: I want to know what each part means before I click.
+  Acceptance Criterion: Three visible, plain-language explanations connect each visual to a code concept.
+- [ISS-1.02] [Severity: MEDIUM] [Location: docs/codebase-bead-maze.html, header and styles]
+  Tool Evidence: Baseline screenshot shows beige surfaces, a Georgia title, and uniform low-emphasis panels.
+  Critique: This feels like a document, not a cool toy to explore.
+  Acceptance Criterion: A coherent playful color palette, expressive type, bead artwork, and distinct discovery tools.
+- [ISS-1.03] [Severity: HIGH] [Location: docs/codebase-map.js, showGraph and selectFile]
+  Tool Evidence: Full module read shows no guided first interaction; only selecting a file changes the inspector.
+  Critique: What should I do first, and what did that arrow just do?
+  Acceptance Criterion: A three-step guide follows a real graph edge and explains source and target perspectives.
+- [ISS-1.04] [Severity: MEDIUM] [Location: docs/codebase-bead-maze.html, scene-controls and file-list styles]
+  Tool Evidence: Baseline CSS uses 5px vertical control padding with 12px type and 7px vertical file-button padding.
+  Critique: My finger needs a bigger target.
+  Acceptance Criterion: Primary buttons, scene controls and file choices offer at least 44px height.
+- [ISS-1.05] [Severity: MEDIUM] [Location: docs/codebase-map.js, renderFiles]
+  Tool Evidence: Source returns an empty list and count only when no file matches.
+  Critique: Did I break the toy? How do I get my beads back?
+  Acceptance Criterion: No-match message, recovery advice, and Clear search action restore all files and search focus.
+- [ISS-1.06] [Severity: MEDIUM] [Location: docs/bead-scene.js, makeReferences and select]
+  Tool Evidence: Source draws static reference lines and immediately changes bead scale; there is no meaningful animated feedback or motion control.
+  Critique: Let me see which way the connection goes, with some satisfying motion!
+  Acceptance Criterion: Modern locally shipped libraries animate discovery, selection and source-to-target reference travel, with reduced-motion and explicit off support.
+- [ISS-1.07] [Severity: LOW] [Location: docs/codebase-map.js, selectFile and showGraph]
+  Tool Evidence: Baseline zero-reference inspector renders only References (0) and Referenced by (0); empty maps keep a selection prompt.
+  Critique: Is a bead with no arrows broken?
+  Acceptance Criterion: Isolated beads, empty maps and no-reference guides receive truthful explanations and usable controls.
+</adversarial_review>
+    <fixes>
+- [FIX-1.01 -&gt; ISS-1.01] docs/codebase-bead-maze.html and docs/playground.css: Added bead/file, track/folder and arrow/uses explanation cards plus a directional color key. Verified by desktop/mobile screenshots and browser accessibility checks.
+- [FIX-1.02 -&gt; ISS-1.02] docs/codebase-bead-maze.html and docs/playground.css: Rebuilt the page in lavender, lime and coral with responsive cards, native SVG bead artwork and a distinct guide. Verified at 320, 390, 768, 980 and 1440px without horizontal overflow.
+- [FIX-1.03 -&gt; ISS-1.03] docs/discovery-guide.js and docs/codebase-map.js: Added deterministic three-step discovery using actual graph source/target IDs, manual-selection reset, completion and replay. Keyboard and real-reference browser probes pass.
+- [FIX-1.04 -&gt; ISS-1.04] docs/playground.css: Increased actionable control heights to 44px or more; added focus styles and a skip link. Keyboard probes and axe checks pass.
+- [FIX-1.05 -&gt; ISS-1.05] docs/codebase-map.js and HTML: Added visible empty-search recovery, including Unicode and markup-shaped search coverage. Clear search restores three fixture files and focuses the input.
+- [FIX-1.06 -&gt; ISS-1.06] docs/playground-motion.js, docs/bead-scene.js and docs/vendor/: Pinned Anime.js 4.5.0 and canvas-confetti 1.9.4, preserving licenses. Added staggered entrances, spring bead pops, halo feedback, finite directional lights and completion confetti. Saved preference and live OS reduced-motion changes stop effects. Vendored files match installed distribution files via cmp; static smoke passes.
+- [FIX-1.07 -&gt; ISS-1.07] docs/codebase-map.js and docs/discovery-guide.js: Added solo-bead, empty-project, self-reference and disconnected-map explanations. Browser boundary probes pass.
+Baseline and first implementation verification: 12/12 unit tests, build, existing WebGL/mobile/static-export browser smoke and syntax checks passed.
+</fixes>
+  </iteration>
+  <iteration number="2">
+    <adversarial_review>
+- [ISS-2.01] [Severity: HIGH] [Location: docs/discovery-guide.js and mobile layout]
+  Tool Evidence: .scratch/review/after-mobile.png shows the guide below the full maze; activating it leaves the bead and its narration separated by scrolling.
+  Critique: I cannot watch the bead while reading what happened.
+  Acceptance Criterion: Active mobile instructions and a visible next action sit beside the maze; keyboard focus follows that action.
+- [ISS-2.02] [Severity: MEDIUM] [Location: docs/codebase-map.js, showGraph fallback instructions]
+  Tool Evidence: Forced missing Three.js route produces canvas2d while the original hint still promises drag orbit and keyboard camera controls.
+  Critique: I followed the directions and the toy would not spin.
+  Acceptance Criterion: Flat view explains its actual controls and hides unsupported camera actions.
+- [ISS-2.03] [Severity: HIGH] [Location: docs/codebase-map.js selectFile; docs/discovery-guide.js render]
+  Tool Evidence: npm run test:ui reported color-contrast violations on guide-step, guide-body, detail-body and connection-note while opacity transitions ran.
+  Critique: The explanation should stay readable when it changes.
+  Acceptance Criterion: Updated text remains fully opaque while animated; axe passes immediately after interaction.
+- [ISS-2.04] [Severity: MEDIUM] [Location: docs/bead-scene.js, makeReferences; docs/playground-motion.js, animate]
+  Tool Evidence: Source inspection found particles created when user motion was enabled even if the optional Anime.js import returned null; animate then returned no handle.
+  Critique: A frozen dot is confusing, not an animation.
+  Acceptance Criterion: Missing effects leave core interaction intact, no traveling particles and referenceMotion idle.
+- [ISS-2.05] [Severity: LOW] [Location: docs/discovery-guide.js, End tour]
+  Tool Evidence: Source inspection shows end-tour focus targeting canvas; the flat fallback canvas has no tabIndex and cannot receive that focus.
+  Critique: Do not lose my place when I end the tour.
+  Acceptance Criterion: End tour focuses the WebGL canvas or the fallback file-search control, both tested.
+- [ISS-2.06] [Severity: NITPICK] [Location: docs/codebase-map.js, warning-count]
+  Tool Evidence: Desktop screenshot displayed About this map (1 notes).
+  Critique: It should say one note.
+  Acceptance Criterion: Singular and plural note labels agree with the count.
+</adversarial_review>
+    <fixes>
+- [FIX-2.01 -&gt; ISS-2.01] docs/codebase-bead-maze.html, docs/playground.css and docs/discovery-guide.js: Added a compact active-tour panel above the mobile canvas, synchronized next/end actions, stage scrolling and focus on the visible next action. The mobile dock fits within 844px; keyboard focus, screenshot and reflow probes pass.
+- [FIX-2.02 -&gt; ISS-2.02] docs/codebase-map.js: Flat renderer receives truthful tap/list instructions; reset and spin sticker are hidden. Forced fallback browser probe passes.
+- [FIX-2.03 -&gt; ISS-2.03] docs/codebase-map.js and docs/discovery-guide.js: Removed opacity effects from changing text while retaining motion. Axe now passes the selected desktop and mobile-tour states.
+- [FIX-2.04 -&gt; ISS-2.04] docs/playground-motion.js and docs/bead-scene.js: Separate available animation capability from user preference. Missing effect modules cannot start reference travel. Browser probe confirms idle state and a working completed tour with effects and storage unavailable.
+- [FIX-2.05 -&gt; ISS-2.05] docs/discovery-guide.js: Focus moves to a focusable WebGL canvas or file-search fallback. Both paths pass browser assertions.
+- [FIX-2.06 -&gt; ISS-2.06] docs/codebase-map.js: Corrected note pluralization; final source and screenshot inspection confirm the singular form.
+</fixes>
+  </iteration>
+  <iteration number="3">
+    <adversarial_review>
+- [ISS-3.01] [Severity: HIGH] [Location: docs/playground-motion.js, revealPlayground]
+  Tool Evidence: A fresh fallback-page accessibility run caught color-contrast failures on lede and explanation-card text during their entrance fade.
+  Critique: The first instructions must be readable as soon as they appear.
+  Acceptance Criterion: Entrances keep text fully opaque, including during initial loading; immediate axe checks pass.
+- [ISS-3.02] [Severity: LOW] [Location: package.json, @axe-core/playwright development dependency]
+  Tool Evidence: npm package metadata for the initially chosen 4.14.0 requires Node &gt;=22.12.0, beyond the project's documented &gt;=22 support. Registry metadata for 4.13.0 has no added Node engine constraint.
+  Critique: The UI checks should work with the project's stated setup.
+  Acceptance Criterion: Keep a compatible pinned accessibility tool and rerun all checks.
+</adversarial_review>
+    <fixes>
+- [FIX-3.01 -&gt; ISS-3.01] docs/playground-motion.js and scripts/ui-review.mjs: Removed entrance opacity animation, kept staggered movement, and removed the initial accessibility-test delay so checks include entrances. Fresh desktop and fallback accessibility checks pass.
+- [FIX-3.02 -&gt; ISS-3.02] package.json and package-lock.json: Pinned @axe-core/playwright 4.13.0, then reran the UI suite, unit tests, build, smoke and dependency audit.
+</fixes>
+  </iteration>
+  <iteration number="4">
+    <adversarial_review>
+- [ISS-4.01] [Severity: LOW] [Location: docs/bead-scene.js, layoutLabels]
+  Tool Evidence: Independent Playwright stress probe selected 30 files, disabled file names, and reset the camera. It found 18 elements matching .file-label.is-selected instead of one. Source inspection showed class updates occurred after early exits for hidden labels.
+  Critique: A label should only carry a selection marker for the current bead, even while hidden.
+  Acceptance Criterion: After 30 selections in a crowded 80-file map, hiding labels and resetting leaves exactly one selected label, visible and matching the current file.
+</adversarial_review>
+    <fixes>
+- [FIX-4.01 -&gt; ISS-4.01] docs/bead-scene.js and scripts/ui-review.mjs: Synchronize selection and hover classes before any label-visibility early exit. Added a crowded 80-file browser regression with 30 selections, hidden file names and camera reset. The current selected label remains the only selected label.
+</fixes>
+  </iteration>
+  <iteration number="5">
+    <adversarial_review>
+Final clean review of the exercised UI scope: zero remaining persona complaints.
+Tool checks: node --check for changed application/test modules; npm run build; npm test (12 passed, 0 failed); npm run smoke (WebGL, hover/picking, search, rescan, errors, retina canvas, mobile fallback and static export); npm run test:ui (keyboard guide, real reference direction, interrupted tours, empty-search recovery, 320–1440px reflow, mobile narration/focus, live reduced motion, stored preference, empty/isolated/self-reference maps, fallback, unavailable effects/storage, crowded-map label-state regression, and zero WCAG A/AA axe violations in four states); npm audit --audit-level=low (0 vulnerabilities); git diff --check; cmp against both pinned npm effect distributions.
+Manual rendered inspection: .scratch/verification/playground-desktop.png and playground-mobile-tour.png; real-project browser probe reported no uncaught errors, no HTTP failures and no viewport overflow.
+Jev use: brainstorm Nouls supported a real-edge tour (0.89), directional lights (0.86) and larger controls with recovery guidance (0.88). Ambient-particle competition was uncertain (0.78); the implementation uses finite contextual effects. Bounded library decision selected Anime.js plus canvas-confetti (0.99), with no contradicted requirements. UI control flow and tour state remain deterministic local code; no model integration was added to the product.
+Limits: These are empirical checks of the local Chrome build and the states listed above, not a claim about every browser or every possible repository.
+
+Independent reasoning review after Jev escalation: the first Jev gate verified all three completion claims (confidence 1.00, 0.98, 0.98) but escalated patch uncertainty (safe_to_apply 0.66; composite 0.758; low-confidence blast-radius/test-gap rubric judgments). That was not automatic acceptance. Host source review confirmed no changes to the scanner, server, layout algorithm or build script. Runtime stress checks confirmed visibly advancing effects, a settled idle canvas, cancellation under motion-off, and no uncaught errors; the hidden-label defect found in that review was fixed in iteration 4. The source and runtime review informed the decision to proceed within the already authorized UI scope.
+
+The final incremental Jev gate verified the updated tests and crowded-map regression (confidence 1.00, 0.98, 0.88), while again escalating patch uncertainty (safe_to_apply 0.74; composite 0.837; blast-radius confidence 0.00). The host reasoning review checked the exact invariant: each label now receives is-selected iff its unique file ID equals the selected ID before any continue, so hiding a label cannot preserve a stale marker. The change affects only label classes; validation still enforces unique node IDs. The crowded-map test and the independent real-project stress probe validate that invariant in the rendered UI. Neither Jev gate was treated as automatic patch approval.
+</adversarial_review>
+    <fixes>
+None required - all verification checks passed.
+</fixes>
+  </iteration>
+</persona_review>

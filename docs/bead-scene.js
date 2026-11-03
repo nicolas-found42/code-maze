@@ -1,4 +1,5 @@
 import { createCanvasMaze } from "./bead-fallback.js";
+import { motion } from "./playground-motion.js";
 export { positionGraph } from "./bead-layout.js";
 
 export function createMaze(container, onSelect) {
@@ -19,7 +20,7 @@ export function createMaze(container, onSelect) {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xf0e9dd);
+  scene.background = new THREE.Color(0xf6f3fc);
   const camera = new THREE.PerspectiveCamera(38, 1, 1, 100000);
   scene.add(new THREE.HemisphereLight(0xfff8ee, 0x99734c, 2.0));
   const key = new THREE.DirectionalLight(0xfff4de, 3.0);
@@ -52,6 +53,15 @@ export function createMaze(container, onSelect) {
   halo.renderOrder = 20;
   halo.visible = false;
   scene.add(halo);
+  let effects = [];
+  function stopEffects() {
+    for (const effect of effects) effect?.revert();
+    effects = [];
+    referenceLayer.children.filter((item) => item.userData.particle).forEach((item) => { item.visible = false; });
+    container.dataset.referenceMotion = "idle";
+    invalidate();
+  }
+  motion.subscribe((enabled) => { if (!enabled) stopEffects(); });
 
   function invalidate() { if (!frame) frame = requestAnimationFrame(render); }
   const loader = new THREE.TextureLoader();
@@ -113,6 +123,8 @@ export function createMaze(container, onSelect) {
       return priority(a) - priority(b) || b.degree - a.degree;
     });
     for (const label of ordered) {
+      label.element.classList.toggle("is-selected", label.kind === "file" && label.id === selected);
+      label.element.classList.toggle("is-hovered", label.kind === "file" && label.id === hovered);
       const active = label.kind === "file" && (label.id === selected || label.id === hovered);
       if (label.kind === "file" && !names && !active) { label.element.hidden = true; continue; }
       const point = project(label.position);
@@ -126,8 +138,6 @@ export function createMaze(container, onSelect) {
       label.element.hidden = !visible;
       if (!visible) continue;
       label.element.style.transform = `translate(${x}px, ${y}px)`;
-      label.element.classList.toggle("is-selected", label.kind === "file" && label.id === selected);
-      label.element.classList.toggle("is-hovered", label.kind === "file" && label.id === hovered);
       occupied.push(box);
     }
   }
@@ -245,6 +255,7 @@ export function createMaze(container, onSelect) {
     if (!id) return;
     const byId = new Map(graph.nodes.map((node) => [node.id, node]));
     const edges = graph.edges.filter((edge) => edge.source === id || edge.target === id);
+    const travelers = [];
     edges.forEach((edge, index) => {
       const a = byId.get(edge.source), b = byId.get(edge.target);
       const color = edge.source === id ? 0xb86c18 : 0x315e94;
@@ -257,11 +268,28 @@ export function createMaze(container, onSelect) {
       arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curve.getTangent(0.8).normalize());
       arrow.renderOrder = 9;
       referenceLayer.add(arrow);
+      if (motion.canAnimate && index < 12) {
+        const particle = new THREE.Mesh(new THREE.SphereGeometry(6, 10, 8), new THREE.MeshBasicMaterial({ color, depthTest: false }));
+        particle.renderOrder = 10;
+        particle.userData.particle = true;
+        referenceLayer.add(particle);
+        travelers.push({ particle, curve });
+      }
     });
+    if (travelers.length) {
+      const progress = { t: 0 };
+      container.dataset.referenceMotion = "playing";
+      effects.push(motion.animate(progress, {
+        t: [0, 1], duration: 1800, ease: "linear",
+        onUpdate() { for (const { particle, curve } of travelers) particle.position.copy(curve.getPoint(progress.t)); invalidate(); },
+        onComplete() { for (const { particle } of travelers) particle.visible = false; container.dataset.referenceMotion = "idle"; invalidate(); },
+      }));
+    }
   }
   resize();
   return {
     setGraph(next) {
+      stopEffects();
       if (content) { scene.remove(content); dispose(content); }
       dispose(referenceLayer);
       graph = next; selected = undefined; hovered = undefined; halo.visible = false;
@@ -324,8 +352,12 @@ export function createMaze(container, onSelect) {
       container.dataset.nodes = String(graph.nodes.length);
       container.dataset.edges = String(graph.edges.length);
       container.dataset.tracks = String(graph.rails.length);
+      meshes.slice(0, 80).forEach((mesh, index) => {
+        effects.push(motion.animate(mesh.scale, { x: [.05, 1], y: [.05, 1], z: [.05, 1], duration: 650, delay: Math.min(index * 22, 400), ease: "outElastic(1, .6)", onUpdate: invalidate }));
+      });
     },
     select(id) {
+      stopEffects();
       selected = id; halo.visible = Boolean(id);
       const neighbors = new Set([id]);
       for (const edge of graph.edges) if (edge.source === id || edge.target === id) { neighbors.add(edge.source); neighbors.add(edge.target); }
@@ -335,12 +367,14 @@ export function createMaze(container, onSelect) {
         mesh.material.opacity = !id || neighbors.has(mesh.userData.id) ? 1 : 0.38;
         mesh.material.emissive.set(active ? 0x5b3910 : 0);
         if (active) halo.position.copy(mesh.position);
+        if (active) effects.push(motion.animate(mesh.scale, { x: [1.55, 1.14], y: [1.55, 1.14], z: [1.55, 1.14], duration: 650, ease: "outElastic(1, .5)", onUpdate: invalidate }));
       }
       for (const label of labels) if (label.kind === "file") {
         label.element.classList.toggle("is-related", Boolean(id) && neighbors.has(label.id));
         label.element.textContent = label.id === id ? label.id : label.text;
       }
       makeReferences(id);
+      effects.push(motion.animate(halo.scale, { x: [1.5, 1], y: [1.5, 1], z: [1.5, 1], duration: 700, ease: "out(3)", onUpdate: invalidate }));
       container.dataset.selected = id || "";
       invalidate();
     },

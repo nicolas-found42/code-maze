@@ -12,16 +12,20 @@
     "test": "node --test",
     "smoke": "node scripts/smoke.mjs",
     "build": "node scripts/build.mjs",
-    "preview": "node scripts/server.mjs --directory dist"
+    "preview": "node scripts/server.mjs --directory dist",
+    "test:ui": "node scripts/ui-review.mjs"
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
+    "animejs": "4.5.0",
+    "canvas-confetti": "1.9.4",
     "ignore": "^7.0.14",
     "typescript": "^6.0.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "playwright": "^1.64.1"
   }
 }

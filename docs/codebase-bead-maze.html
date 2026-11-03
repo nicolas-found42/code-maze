@@ -3,92 +3,61 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Code Maze | Local repository map</title>
-    <style>
-      :root { color-scheme: light; --bg: #f3efe6; --surface: #fffaf0; --ink: #2b241b; --muted: #695c49; --line: #b8a98f; --accent: #275b4a; }
-      * { box-sizing: border-box; }
-      body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, sans-serif; }
-      .wrap { max-width: 1540px; padding: 24px; margin: auto; }
-      header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
-      h1 { margin: 0; font: 600 34px/1.2 Georgia, serif; }
-      h2 { font-size: 18px; margin: 0 0 8px; }
-      h3 { font-size: 14px; margin: 14px 0 6px; }
-      a { color: var(--accent); }
-      .lede { color: var(--muted); margin: 8px 0 20px; }
-      #scan-form { display: flex; gap: 10px; align-items: end; margin-bottom: 8px; }
-      label { font-size: 13px; font-weight: 600; display: block; }
-      .path-field { flex: 1; }
-      input, button { font: inherit; }
-      input { width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; background: var(--surface); color: var(--ink); }
-      button { cursor: pointer; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); padding: 9px 12px; }
-      button:disabled { cursor: default; opacity: 0.55; }
-      #scan-button { background: var(--accent); border-color: var(--accent); color: white; white-space: nowrap; }
-      :focus-visible { outline: 3px solid #2f6fd6; outline-offset: 2px; }
-      #status { min-height: 24px; color: var(--muted); margin: 6px 0 16px; }
-      #status[data-state="error"] { color: #a2271d; }
-      .content { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 18px; }
-      .stage, .panel { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
-      .stage-header { padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-      .scene-controls { display: flex; align-items: center; gap: 12px; font-size: 12px; }
-      .scene-controls label { display: flex; gap: 5px; align-items: center; font-size: 12px; }
-      .scene-controls input { width: auto; accent-color: var(--accent); }
-      .scene-controls button { padding: 5px 10px; font-size: 12px; }
-      #repo-name { margin: 0; }
-      #summary { color: var(--muted); font-size: 13px; }
-      #scene { position: relative; height: min(67vh, 740px); min-height: 430px; width: 100%; touch-action: none; overflow: hidden; }
-      .scene-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-      .scene-label { position: absolute; top: 0; left: 0; font: 11px/18px ui-monospace, monospace; padding: 1px 6px; max-width: 185px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 4px; background: #fffaf0e8; color: #46311e; box-shadow: 0 1px 3px #35251722; border: 1px solid #b99b7470; }
-      .track-label { font: 600 12px/19px system-ui, sans-serif; border-radius: 12px; padding: 2px 9px; background: #fffaf0f5; }
-      .scene-label.is-selected { z-index: 4; background: #36291c; color: #fff6d4; border: 2px solid #e6b53e; font-weight: 700; }
-      .scene-label.is-related { border-color: #b27932; }
-      .scene-label.is-hovered { z-index: 5; border-color: #4e6e61; }
-      .bead-tooltip { position: absolute; z-index: 8; pointer-events: none; background: #2c241def; color: #fff9e9; font: 12px/1.4 ui-monospace, monospace; padding: 7px 10px; border-radius: 6px; max-width: 250px; overflow-wrap: anywhere; }
-      canvas { display: block; }
-      #legend { display: flex; gap: 8px 18px; flex-wrap: wrap; padding: 12px 18px; font-size: 12px; border-top: 1px solid var(--line); }
-      #legend span { display: flex; align-items: center; gap: 6px; }
-      #legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
-      .hint { font-size: 12px; color: var(--muted); margin: 10px 0; }
-      .panel { padding: 16px; }
-      #detail-meta { font-family: ui-monospace, monospace; overflow-wrap: anywhere; }
-      #detail-body { color: var(--muted); font-size: 12px; margin: 8px 0; }
-      #file-list { max-height: 310px; overflow: auto; display: grid; gap: 4px; margin-top: 8px; }
-      #file-list button, #connections button { text-align: left; width: 100%; font: 12px/1.4 ui-monospace, monospace; overflow-wrap: anywhere; padding: 7px 9px; }
-      #connections { max-height: 220px; overflow: auto; margin-bottom: 16px; }
-      button[aria-pressed="true"] { border-color: var(--accent); background: #e3ede5; }
-      #file-count { font-size: 12px; color: var(--muted); margin-top: 6px; }
-      details { font-size: 13px; margin-top: 12px; }
-      summary { cursor: pointer; }
-      @media (max-width: 850px) { .wrap { padding: 14px; } .content { grid-template-columns: 1fr; } h1 { font-size: 28px; } #scene { min-height: 340px; } }
-      @media (max-width: 480px) { header { display: block; } #scan-form { align-items: stretch; flex-direction: column; } }
-    </style>
+    <meta name="theme-color" content="#eeeafb" />
+    <title>Code Maze | A playground for curious minds</title>
+    <link rel="stylesheet" href="./playground.css" />
   </head>
   <body data-source="live">
+    <a class="skip-link" href="#playground">Skip to the playground</a>
     <div class="wrap">
-      <header><h1>Codebase Bead Maze</h1><a href="./bead-maze-photo3d.html">Toy reference</a></header>
-      <p class="lede">Explore a local repository. Files on painted directory tracks. Select a bead to trace its references.</p>
-      <form id="scan-form">
-        <div class="path-field"><label for="repo-path">Local repository path</label><input id="repo-path" placeholder="/path/to/your/repository" required autocomplete="off" spellcheck="false" /></div>
-        <button id="scan-button" type="submit">Generate map</button>
-      </form>
-      <p id="status" role="status" aria-live="polite">Preparing the map…</p>
-      <div class="content">
-        <main>
-          <div class="stage">
-            <div class="stage-header"><div><h2 id="repo-name">Repository</h2><div id="summary">Waiting for a scan</div></div><div class="scene-controls"><label><input id="show-labels" type="checkbox" checked /> File names</label><button id="reset-view" type="button">Reset view</button></div></div>
-            <div id="scene"></div>
-            <div id="legend" aria-label="Directory groups"></div>
-          </div>
-          <p class="hint">Drag to orbit · Scroll to zoom · Hover for a path · Select a bead to trace references</p>
-          <p class="hint">Solid tracks hold directory files. Dashed arrows show selected references: gold outgoing, blue incoming. Static analysis may miss runtime dependencies.</p>
-          <details id="scan-notes" hidden><summary>Scan notes</summary><ul id="warnings"></ul></details>
-        </main>
-        <aside class="panel">
-          <h2>Selected file</h2>
-          <div id="detail-meta">Select a bead or file.</div><div id="detail-body"></div><div id="connections"></div>
-          <label for="file-search">Find a file</label><input id="file-search" type="search" placeholder="Filter by path…" />
-          <div id="file-count"></div><div id="file-list" aria-label="Repository files"></div>
-        </aside>
+      <header class="topbar">
+        <a class="brand" href="../index.html" aria-label="Code Maze home"><span class="brand-icon" aria-hidden="true"><i></i><i></i><i></i></span>code maze<span class="brand-dot" aria-hidden="true">✳</span></a>
+        <div class="top-actions"><button id="motion-toggle" type="button" aria-pressed="true">Motion on</button><a class="toy-link" href="./bead-maze-photo3d.html">Meet the real toy <span aria-hidden="true">↗</span></a></div>
+      </header>
+      <section class="hero" aria-labelledby="page-title">
+        <div><p class="eyebrow"><span class="spark" aria-hidden="true">✳</span> A PLAYGROUND FOR CURIOUS MINDS</p><h1 id="page-title">Small beads.<br />Big <span>discoveries.</span></h1><p class="lede">Your code is a little world. Pick a bead.<br class="desktop-break" /> Follow a connection. See how it all fits together.</p></div>
+        <div class="hero-art" aria-hidden="true">
+          <svg viewBox="0 0 400 220"><path d="M30 175 C30 30 150 20 170 110 S350 220 365 45" fill="none" stroke="#a88afb" stroke-width="12" stroke-linecap="round"/>
+            <g class="art-bead"><circle cx="76" cy="71" r="33" fill="#c8f36b" stroke="#252338" stroke-width="2"/><ellipse cx="65" cy="60" rx="7" ry="10" fill="#efffcf" transform="rotate(35 65 60)"/><circle cx="76" cy="71" r="8" fill="#252338"/></g>
+            <g class="art-bead"><rect x="172" y="125" width="59" height="59" rx="17" fill="#ff927b" stroke="#252338" stroke-width="2" transform="rotate(-20 202 155)"/><circle cx="202" cy="155" r="8" fill="#252338"/></g>
+            <g class="art-bead"><circle cx="352" cy="96" r="35" fill="#b4a0f2" stroke="#252338" stroke-width="2"/><circle cx="341" cy="91" r="4" fill="#252338"/><circle cx="360" cy="91" r="4" fill="#252338"/><path d="M342 106 Q352 116 362 106" fill="none" stroke="#252338" stroke-width="3" stroke-linecap="round"/></g>
+          </svg><span class="art-note">a little click. a big aha! <span>↗</span></span>
+        </div>
+      </section>
+      <div class="how-it-works" aria-label="How the maze works">
+        <div class="explain-card"><span class="explain-icon bead-symbol" aria-hidden="true"></span><p><strong>A bead is a file.</strong><span>A tiny piece of your project.</span></p><span class="card-number" aria-hidden="true">01</span></div>
+        <div class="explain-card"><span class="explain-icon track-symbol" aria-hidden="true">∿</span><p><strong>A track is a folder.</strong><span>It keeps a family of files together.</span></p><span class="card-number" aria-hidden="true">02</span></div>
+        <div class="explain-card"><span class="explain-icon arrow-symbol" aria-hidden="true">↗</span><p><strong>An arrow means “uses”.</strong><span>Follow it to a file this one uses.</span></p><span class="card-number" aria-hidden="true">03</span></div>
       </div>
+      <section class="scan-bar" aria-label="Choose a project">
+        <form id="scan-form"><div class="path-field"><label for="repo-path">Local repository path <span>· your project folder</span></label><input id="repo-path" placeholder="/path/to/your/repository" required autocomplete="off" spellcheck="false" /></div><button id="scan-button" type="submit">Generate map <span aria-hidden="true">↗</span></button></form>
+        <p id="status" role="status" aria-live="polite">Getting your playground ready…</p>
+      </section>
+      <main id="playground" tabindex="-1" class="content">
+        <div class="maze-column">
+          <section class="stage" aria-labelledby="repo-name">
+            <div class="stage-header"><div class="stage-title"><span class="live-dot" aria-hidden="true"></span><div><h2 id="repo-name">Your code world</h2><div id="summary">Waiting for a map</div></div></div><div class="scene-controls"><label><input id="show-labels" type="checkbox" checked /> File names</label><button id="reset-view" type="button"><span aria-hidden="true">↺</span> Reset view</button></div></div>
+            <div id="mobile-tour" hidden><p id="mobile-tour-heading"></p><p id="mobile-tour-body"></p><div><button id="mobile-tour-next" class="dark-button" type="button"></button><button id="end-tour" type="button">End tour</button></div></div>
+            <div class="scene-wrap"><div id="scene" aria-describedby="scene-help"></div><span class="scene-sticker" aria-hidden="true">GO ON, GIVE IT A SPIN <span>↻</span></span></div>
+            <div class="scene-footer"><p id="scene-help"><span aria-hidden="true">✥</span> Drag to spin <b>·</b> Scroll to zoom <b>·</b> Pick a bead</p><p class="keyboard-hint">Keyboard: arrows spin · + / − zoom · 0 resets</p></div>
+            <div id="legend" aria-label="Directory groups"></div>
+          </section>
+          <div class="reference-key"><span><i class="gold-arrow" aria-hidden="true">↗</i> Gold: this file uses another</span><span><i class="blue-arrow" aria-hidden="true">↙</i> Blue: another file uses this one</span></div>
+          <p class="hint">Tracks hold files in a folder. Arrows show references found in the code; some connections made while a program runs may be missing.</p>
+          <details id="scan-notes" hidden><summary>About this map <span id="warning-count"></span></summary><ul id="warnings"></ul></details>
+        </div>
+        <aside class="sidebar" aria-label="Discovery tools">
+          <section class="guide-card" aria-labelledby="guide-heading">
+            <div class="guide-top"><span class="eyebrow">YOUR FIRST DISCOVERY</span><span class="guide-face" aria-hidden="true"><i></i><i></i><b></b></span></div>
+            <div id="guide-copy" aria-live="polite" aria-atomic="true"><p id="guide-step" class="step-label">A tiny adventure, in 3 steps</p><h2 id="guide-heading">Let’s connect the dots.</h2><p id="guide-body">I’ll help you find a file, spot what it uses, and follow the connection.</p></div>
+            <div class="guide-progress" aria-hidden="true"><span></span><span></span><span></span></div>
+            <button id="guide-next" class="dark-button" type="button" disabled>Show me how <span aria-hidden="true">→</span></button>
+          </section>
+          <section class="panel detail-panel" aria-labelledby="detail-heading"><div class="panel-heading"><h2 id="detail-heading">Bead explorer</h2><span class="mini-bead" aria-hidden="true"></span></div><div id="detail-content"><div id="detail-meta">What will you discover?</div><div id="detail-body">Tap a bead in the maze or choose a file below. Its story will appear here.</div><p id="detail-story" role="status"></p><div id="connections"></div></div></section>
+          <section class="panel file-panel"><label for="file-search">Find a file</label><input id="file-search" type="search" placeholder="Try a name or folder…" /><div id="file-count" role="status"></div><div id="empty-search" hidden><strong>No beads found.</strong><p>Try a shorter name, or clear your search to see every file.</p><button id="clear-search" type="button">Clear search</button></div><div id="file-list" aria-label="Repository files"></div></section>
+        </aside>
+      </main>
+      <footer class="page-footer"><span>MADE FOR THE “OH, NOW I GET IT” MOMENT.</span><span>Stay curious. <span aria-hidden="true">✳</span></span></footer>
     </div>
     <script type="module" src="./codebase-map.js"></script>
   </body>
