@@ -1,6 +1,7 @@
 import { build } from "esbuild";
 import { cp, readFile } from "node:fs/promises";
 import { REVISION } from "three";
+import { createHash } from "node:crypto";
 
 const core = await readFile("docs/vendor/three.module.js", "utf8");
 if (!core.includes(`const REVISION = "${REVISION}";`) && !core.includes(`const REVISION = '${REVISION}';`)) {
@@ -48,4 +49,14 @@ await build({
   } }],
 });
 await cp("node_modules/three-gpu-pathtracer/LICENSE", "docs/vendor/three-gpu-pathtracer.LICENSE");
+await build({
+  stdin: { contents: "export { initUNetFromBuffer } from 'oidn-webgpu';", resolveDir: process.cwd() },
+  bundle: true, format: "esm", minify: true, legalComments: "eof", outfile: "docs/vendor/oidn.js",
+});
+await cp("node_modules/oidn-webgpu/LICENSE", "docs/vendor/oidn-webgpu.LICENSE");
+await cp("node_modules/@petamoriken/float16/LICENSE", "docs/vendor/float16.LICENSE");
+const weights = await readFile("docs/vendor/oidn-rt_hdr_alb_nrm.tza");
+if (weights.byteLength !== 1841160 || createHash("sha256").update(weights).digest("hex") !== "e586ef2ff48d7fbb7611986405220ed8fc5c13ca79bfc40be4dc742fbf959e1a") {
+  throw new Error("Pinned OIDN guide model differs; verify its source and license before rebuilding.");
+}
 console.log("Built offline fidelity tools with one external Three module.");

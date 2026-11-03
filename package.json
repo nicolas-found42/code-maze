@@ -16,7 +16,8 @@
     "test:ui": "node scripts/ui-review.mjs",
     "assets:3d": "node scripts/bake-bead.mjs && node scripts/vendor-3d.mjs",
     "test:fidelity": "node scripts/fidelity-review.mjs",
-    "test:studio": "node scripts/studio-review.mjs"
+    "test:studio": "node scripts/studio-review.mjs",
+    "test:photographic": "node scripts/photographic-review.mjs"
   },
   "engines": {
     "node": ">=22"
@@ -31,6 +32,7 @@
     "@axe-core/playwright": "4.13.0",
     "esbuild": "0.25.12",
     "n8ao": "2.0.1",
+    "oidn-webgpu": "0.6.0",
     "playwright": "^1.64.1",
     "postprocessing": "6.35.3",
     "three": "0.160.0",

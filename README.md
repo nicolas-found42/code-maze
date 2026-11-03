@@ -27,7 +27,7 @@ The toy uses five drilled bead shapes, including a rounded block baked with BVH 
 
 Compare the same fixture and camera: [before](docs/maze-fidelity/before.jpg) · [after](docs/maze-fidelity/after.jpg).
 
-Choose **Studio photo** to photograph your generated maze with progressive path tracing, soft studio lights and indirect color bounce. Drag or zoom to choose an angle; the interactive map appears while the new view refines. **Save photo** downloads the current image as a PNG. Selection or a new scan returns to the map and releases the photo renderer. The image refines to 256 samples, pauses in hidden tabs, and uses a separate, bounded WebGL context. Apple GPUs use a single-layer enamel finish to avoid an upstream black-clearcoat defect. This improves generated rendering; photographic indistinguishability remains unverified.
+Choose **Studio photo** to photograph your generated maze with progressive path tracing, soft studio lights and indirect color bounce. Drag or zoom to choose an angle; the interactive map appears while the new view refines. **Save photo** downloads the current image as a PNG, up to 1600 pixels on its long side. After 256 samples, supported WebGPU devices refine the light buffer with Open Image Denoise, guided by the same model's albedo and surface normals. The model ships locally; unsupported devices retain spatial denoising. Selection or a new scan releases the photo's GPU resources, and hidden tabs pause refinement. Apple GPUs use a single-layer enamel finish to avoid an upstream black-clearcoat defect. Photographic indistinguishability remains unverified. [Converged close-up](docs/maze-fidelity/studio-close.png).
 
 The server binds to `127.0.0.1`. Scanning reads files locally and does not execute repository code or send source to a service. Only map metadata is returned to the browser; source text stays out of the graph.
 
@@ -79,9 +79,10 @@ npm run smoke
 npm run test:ui
 npm run test:fidelity
 npm run test:studio
+npm run test:photographic
 ```
 
-The tests cover module resolution, nested ignore rules, non-JavaScript references, cycles, limits, missing paths, and API behavior. Layout tests check that every bead is threaded onto an anchored track and that beads have physical clearance. Independent checks derived from the generated vertices verify that corkscrews thread tall-loop openings and low winding paths pass beneath both other track types.
+The tests cover module resolution, nested ignore rules, non-JavaScript references, cycles, limits, missing paths, and API behavior. Layout tests check that every bead is threaded onto an anchored track and that beads have physical clearance. Actual bead/tube mesh intersections check each bead's own curved wire at 30, 240 and 600 files. Independent checks derived from the generated vertices verify that corkscrews thread tall-loop openings and low winding paths pass beneath both other track types.
 
 The browser smoke check uses installed Google Chrome. It covers generated WebGL rendering, direct bead hover and picking, selection labels, label toggling, reset, search, failed scans, rescanning, mobile canvas fallback, and the static export. Screenshots go to `.scratch/verification/`. To use Playwright's Chromium instead, run `npx playwright install chromium` and then `BROWSER_CHANNEL=chromium npm run smoke`.
 
@@ -98,6 +99,7 @@ The active implementation lives in:
 - `docs/bead-layout.js`: continuous directory tracks, bead spacing, positions, and tangents.
 - `docs/bead-scene.js`: Three.js rendering, camera fitting, labels, picking, and reference highlights.
 - `docs/bead-geometry.js`, `bead-materials.js`, `bead-rendering.js`: drilled bead models, timber and paint materials, and the optional studio/N8AO pipeline.
+- `docs/bead-photograph.js`, `photo-guides.js`, `photo-denoising.js`: progressive PNG rendering, linear feature buffers, and cancellable WebGPU refinement.
 - `docs/bead-fallback.js`: canvas fallback using the same graph.
 - `docs/discovery-guide.js`: the three-step reference discovery and mobile instructions.
 - `docs/playground-motion.js`: optional effects and motion preferences.

@@ -6,7 +6,9 @@ import { Brush, Evaluator, SUBTRACTION } from "three-bvh-csg";
 
 const paint = new MeshStandardMaterial();
 const timber = new MeshStandardMaterial();
-const block = new Brush(new RoundedBoxGeometry(30, 32, 30, 4, 4), paint);
+// Sanded timber has a small edge break, rather than the large inflated corner
+// radius of the earlier block. Its full corner still fits the radius-27 layout.
+const block = new Brush(new RoundedBoxGeometry(30, 32, 30, 4, 1.4), paint);
 const drill = new Brush(new CylinderGeometry(7, 7, 44, 64), timber);
 block.updateMatrixWorld();
 drill.updateMatrixWorld();

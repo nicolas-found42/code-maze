@@ -1,7 +1,7 @@
 // Directory tracks are structural. Reference edges remain a separate graph.
-export function pointAlong(points, fraction) {
-  const lengths = [0];
-  for (let i = 1; i < points.length; i++) lengths.push(lengths[i - 1] + Math.hypot(...points[i].map((v, axis) => v - points[i - 1][axis])));
+export function pointAlong(points, fraction, arcLengths) {
+  const lengths = arcLengths || [0];
+  if (!arcLengths) for (let i = 1; i < points.length; i++) lengths.push(lengths[i - 1] + Math.hypot(...points[i].map((v, axis) => v - points[i - 1][axis])));
   const distance = Math.max(0, Math.min(1, fraction)) * lengths.at(-1);
   let index = 1;
   while (index < lengths.length - 1 && lengths[index] < distance) index++;
@@ -13,6 +13,21 @@ export function pointAlong(points, fraction) {
 }
 
 const distance = (a, b) => Math.hypot(...a.map((value, axis) => value - b[axis]));
+
+function clearsBore(points, lengths, fraction, placement) {
+  // All five bores have radius 7, while the support tube has radius 4.8.
+  // Inspect a 44-unit axial span (longest bead + lip), retaining a 0.45-unit
+  // margin for Catmull-Rom interpolation between these sampled track points.
+  const length = lengths.at(-1);
+  for (const offset of [-22, -16, -8, 8, 16, 22]) {
+    const point = pointAlong(points, fraction + offset / length, lengths).position;
+    const delta = point.map((value, axis) => value - placement.position[axis]);
+    const axial = delta.reduce((sum, value, axis) => sum + value * placement.tangent[axis], 0);
+    const radial = Math.sqrt(Math.max(0, delta.reduce((sum, value) => sum + value * value, 0) - axial * axial));
+    if (radial > 1.75) return false;
+  }
+  return true;
+}
 
 function connector(points, a, b, upA, upB) {
   for (let i = points.length && distance(points.at(-1), a) < 0.001 ? 1 : 0; i <= 32; i++) {
@@ -249,7 +264,8 @@ export function positionGraph(graph) {
     const slots = [];
     const first = from + (to - from) * 0.035, last = to - (to - from) * 0.035;
     for (let fraction = first; fraction <= last; fraction += 6 / length) {
-      const candidate = pointAlong(points, fraction);
+      const candidate = pointAlong(points, fraction, lengths);
+      if (!clearsBore(points, lengths, fraction, candidate)) continue;
       if ((space.nearest(candidate.position, rail.id)?.distance ?? Infinity) <= 32) continue;
       if (nodes.some((other) => distance(candidate.position, [other.x, other.y, other.z]) <= 54)) continue;
       if (slots.some((other) => distance(candidate.position, other.position) <= 54)) continue;

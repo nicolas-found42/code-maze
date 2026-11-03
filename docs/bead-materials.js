@@ -1,3 +1,5 @@
+import { normalsFromHeight } from "./finish-normals.js";
+
 export function createToyMaterials(THREE, renderer, invalidate) {
   const loader = new THREE.TextureLoader();
   const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -53,11 +55,8 @@ export function createToyMaterials(THREE, renderer, invalidate) {
   normalCanvas.width = normalCanvas.height = 256;
   const normalContext = normalCanvas.getContext("2d");
   const normalPixels = normalContext.createImageData(256, 256);
-  const height = (x, y) => paintPixels.data[(((y + 256) % 256) * 256 + (x + 256) % 256) * 4] / 255;
-  for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) {
-    const normal = new THREE.Vector3((height(x - 1, y) - height(x + 1, y)) * 0.6, (height(x, y - 1) - height(x, y + 1)) * 0.6, 1).normalize();
-    normalPixels.data.set([Math.round((normal.x + 1) * 127.5), Math.round((normal.y + 1) * 127.5), Math.round((normal.z + 1) * 127.5), 255], (y * 256 + x) * 4);
-  }
+  const heights = Float32Array.from({ length: 256 * 256 }, (_, index) => paintPixels.data[index * 4] / 255);
+  normalPixels.data.set(normalsFromHeight(heights, 256, 256));
   normalContext.putImageData(normalPixels, 0, 0);
   const paintNormal = new THREE.CanvasTexture(normalCanvas);
   paintNormal.wrapS = paintNormal.wrapT = THREE.RepeatWrapping;
@@ -67,11 +66,11 @@ export function createToyMaterials(THREE, renderer, invalidate) {
   return {
     wood, ply,
     bead(color) {
-      return [new THREE.MeshPhysicalMaterial({ color, roughness: 0.58, metalness: 0,
-        clearcoat: 0.24, clearcoatRoughness: 0.3, envMapIntensity: 0.55,
-        normalMap: paintNormal, normalScale: new THREE.Vector2(0.4, 0.4), roughnessMap: paintTexture }), bore.clone()];
+      return [new THREE.MeshPhysicalMaterial({ color, roughness: 0.34, metalness: 0,
+        clearcoat: 0.24, clearcoatRoughness: 0.21, envMapIntensity: 0.55,
+        normalMap: paintNormal, normalScale: new THREE.Vector2(0.65, 0.65), roughnessMap: paintTexture }), bore.clone()];
     },
-    wire(color) { return new THREE.MeshPhysicalMaterial({ color, roughness: 0.29, metalness: 0.05,
-      clearcoat: 0.45, clearcoatRoughness: 0.22, envMapIntensity: 0.35 }); },
+    wire(color) { return new THREE.MeshPhysicalMaterial({ color, roughness: 0.23, metalness: 0.05,
+      clearcoat: 0.45, clearcoatRoughness: 0.17, envMapIntensity: 0.35 }); },
   };
 }

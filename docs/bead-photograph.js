@@ -2,12 +2,16 @@
 // diffuse interreflection, area shadows and enamel reflections converge.
 // An isolated WebGL context gives this optional, memory-heavy renderer a strict
 // lifetime, including allocations upstream v0.0.23's dispose() fails to release.
+import { createPhotoDenoising, readLinearImage } from "./photo-denoising.js";
+import { renderPhotoGuides } from "./photo-guides.js";
+
 export function createPhotograph(THREE, container, sourceCamera, getContent, stopMotion) {
   const button = document.getElementById("studio-photo");
   const save = document.getElementById("save-photo");
   const status = document.getElementById("photo-status");
   let generation = 0, renderer, tracer, camera, frame, timer, environment, floor, denoise;
   let active = false;
+  let neural, neuralQuad, neuralTexture, photoScene, refining = false, refined = false, revision = 0;
   const splitGeometries = new Map();
   const photoMaterials = new Map();
   const LIMIT = 256;
@@ -15,7 +19,13 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
 
   function close(message = "") {
     generation++;
+    revision++;
     active = false;
+    neural?.dispose(); neural = undefined;
+    neuralTexture?.dispose(); neuralTexture = undefined;
+    neuralQuad?.material.dispose(); neuralQuad?.dispose(); neuralQuad = undefined;
+    refining = refined = false;
+    photoScene = undefined;
     clearTimeout(timer);
     cancelAnimationFrame(frame);
     frame = timer = undefined;
@@ -40,6 +50,7 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
     status.textContent = message;
     container.dataset.photo = "off";
     delete container.dataset.photoSamples;
+    delete container.dataset.photoDenoising;
   }
 
   function fail() { close("Studio photo unavailable on this device. You can still explore the map."); }
@@ -47,13 +58,18 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
   function size() {
     // Bound memory and shader cost independently of display DPR / huge screens.
     const width = Math.max(1, container.clientWidth), height = Math.max(1, container.clientHeight);
-    const ratio = Math.min(devicePixelRatio || 1, 1600 / Math.max(width, height), 2);
+    const ratio = Math.min(1600 / Math.max(width, height), 2);
     renderer.setPixelRatio(ratio);
     renderer.setSize(width, height);
   }
 
   function updateCamera() {
     if (!tracer) return;
+    revision++;
+    neural?.cancel();
+    neuralTexture?.dispose(); neuralTexture = undefined;
+    refining = refined = false;
+    container.dataset.photoDenoising = "spatial";
     camera.copy(sourceCamera);
     camera.position.multiplyScalar(SCALE);
     camera.near *= SCALE; camera.far *= SCALE;
@@ -84,14 +100,44 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
       container.dataset.photoSamples = String(samples);
       if (samples >= 4) {
         renderer.domElement.hidden = false;
-        container.dataset.photo = samples >= LIMIT ? "ready" : "rendering";
+        container.dataset.photo = "rendering";
         save.hidden = false;
       }
-      const message = samples >= LIMIT ? "Studio photo ready. Drag to change the angle, or save your photo."
+      const message = samples >= LIMIT ? "Refining photo detail… You can save now, or wait for the finished image."
         : samples < 1 ? "Preparing studio photo…" : "Refining studio photo. You can save now, or wait for a cleaner image.";
       if (status.textContent !== message) status.textContent = message;
       if (tracer.samples < LIMIT) frame = requestAnimationFrame(draw);
+      else refine();
     } catch { fail(); }
+  }
+
+  async function refine() {
+    if (!active || !tracer || refining || refined || document.hidden) return;
+    refining = true;
+    const request = revision;
+    container.dataset.photoDenoising = "working";
+    let output;
+    try {
+      if (navigator.gpu) {
+        neural ??= createPhotoDenoising();
+        const { width, height } = tracer.target;
+        const guides = renderPhotoGuides(THREE, renderer, photoScene, camera, width, height);
+        output = await neural.run({ color: readLinearImage(renderer, tracer.target), ...guides });
+      }
+    } catch { /* The spatially denoised photograph remains usable. */ }
+    if (!active || request !== revision) return;
+    container.dataset.photoDenoising = "spatial";
+    if (output) try {
+        neuralTexture = new THREE.DataTexture(output.data, output.width, output.height, THREE.RGBAFormat, THREE.FloatType);
+        neuralTexture.flipY = true;
+        neuralTexture.needsUpdate = true;
+        neuralQuad.material.map = neuralTexture;
+        neuralQuad.render(renderer);
+        container.dataset.photoDenoising = "oidn";
+      } catch { neuralTexture?.dispose(); neuralTexture = undefined; }
+    refining = false; refined = true;
+    container.dataset.photo = "ready";
+    status.textContent = "Studio photo ready. Drag to change the angle, or save your photo.";
   }
 
   async function open() {
@@ -144,6 +190,7 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
       size();
 
       const scene = new THREE.Scene();
+      photoScene = scene;
       scene.background = new THREE.Color(0xf4f1e9);
       environment = new GradientEquirectTexture(128);
       environment.topColor.set(0xc5d4e3);
@@ -225,6 +272,7 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
       tracer.tiles.set(2, 2);
       tracer.textureSize.set(1024, 1024);
       denoise = new FullScreenQuad(new DenoiseMaterial({ sigma: 2, kSigma: 1, threshold: 0.08 }));
+      neuralQuad = new FullScreenQuad(new THREE.MeshBasicMaterial({ depthTest: false, depthWrite: false, blending: THREE.NoBlending }));
       tracer.renderToCanvasCallback = (target) => {
         denoise.material.map = target.texture;
         denoise.render(renderer);
@@ -247,8 +295,12 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
     });
   });
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) { cancelAnimationFrame(frame); frame = undefined; }
+    if (document.hidden) {
+      cancelAnimationFrame(frame); frame = undefined;
+      revision++; neural?.cancel(); refining = false;
+    }
     else if (active && tracer && tracer.samples < LIMIT && !frame && !timer) frame = requestAnimationFrame(draw);
+    else if (active && tracer && tracer.samples >= LIMIT) refine();
   });
   return {
     close,

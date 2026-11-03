@@ -6,7 +6,7 @@ Historical measurements of the fixed photographic companion and its separate pro
 
 The default entry point opens the generated codebase map. **Studio photo** progressively traces that map's actual drilled meshes, materials and camera with diffuse interreflection and rectangular studio lights. The image-based companion below is a separate reference; it does not represent generated files or tracks. No blind photographic equivalence test of the current generated viewer has passed. This remains an open acceptance requirement.
 
-The same 30-file fixture and camera: [interactive preview](maze-fidelity/studio-preview.jpg) · [256-sample studio photograph](maze-fidelity/studio.png). These images demonstrate the rendering change; they are not a blind comparison against a real toy. The photograph uses the Apple single-layer finish described in [the tool notes](vendor/fidelity-libraries.md).
+The 30-file fixture: [earlier interactive preview](maze-fidelity/studio-preview.jpg) · [converged guided studio photograph](maze-fidelity/studio.png) · [1600-pixel close-up](maze-fidelity/studio-close.png). Modeling, placement and materials also changed, so this is not an isolated denoiser comparison or a blind comparison against a real toy. The photographs use the Apple single-layer finish described in [the tool notes](vendor/fidelity-libraries.md).
 
 ## Selected Persona
 
@@ -30,7 +30,7 @@ The same 30-file fixture and camera: [interactive preview](maze-fidelity/studio-
 
 - **Severity:** HIGH
 - **Location:** Generated scene, `docs/bead-rendering.js` and `docs/bead-photograph.js`.
-- **Tool Evidence:** Baseline `docs/maze-fidelity/after.jpg` versus the generated studio images. Indirect light and contact improve, but no fresh multi-angle blind comparison establishes the requested equivalence. Low-sample close/mobile frames visibly retain noise; manufacturing and material detail require another visual pass.
+- **Tool Evidence:** Baseline `docs/maze-fidelity/after.jpg` versus the generated studio images. Indirect light, gloss and contact improve; fully converged hero/close/mobile images now use guided OIDN. No fresh multi-angle blind comparison establishes the requested equivalence. Manufacturing and material detail still require visual scrutiny.
 - **Persona Critique:** A clean shader, attractive screenshot or real-photo companion cannot substitute for the requested generated result.
 - **Acceptance Criterion:** Generated mazes withstand photographic comparison across overview, close, low and mobile views. **Open.** The goal remains active; no clean review or completion gate is claimed.
 
@@ -66,7 +66,63 @@ The same 30-file fixture and camera: [interactive preview](maze-fidelity/studio-
 - **Persona Critique:** Disposed GPU work must not cancel the next request.
 - **Acceptance Criterion:** A stale event retains the new session and its samples continue.
 
+#### ISS-5.06 — Paint normal Y slope disagreed with its height field
+
+- **Severity:** MEDIUM
+- **Location:** `docs/bead-materials.js`.
+- **Tool Evidence:** CanvasTexture flips image rows; tangent normal Y therefore uses the positive row-height derivative. The earlier generator used its negative. The source/math hypothesis was independently classified as an observable defect by Jev, P=0.98.
+- **Persona Critique:** Height, roughness and raking highlights must describe the same finish.
+- **Acceptance Criterion:** Decoded normals agree with analytic texture-UV gradients on both axes and periodic boundaries.
+
+#### ISS-5.07 — Low-sample captures did not establish final close-up quality
+
+- **Severity:** MEDIUM
+- **Location:** `docs/bead-photograph.js`, photographic validation.
+- **Tool Evidence:** Earlier close/mobile evidence stopped at 32/8 samples despite a 256-sample cap. A converged baseline showed matte synthetic response; color-only neural refinement smoothed surface detail.
+- **Persona Critique:** Judge the finished image and preserve material detail while removing Monte Carlo noise.
+- **Acceptance Criterion:** Fully converged overview/close/mobile captures, aligned linear guides, actual mesh-based HDR refinement and readiness after the available final pass.
+
+#### ISS-5.08 — Curved support tubes intersected their own beads
+
+- **Severity:** HIGH
+- **Location:** `docs/bead-layout.js`.
+- **Tool Evidence:** Independent triangle/BVH intersection found three clipped beads in the 240-file fixture and a failure in the 600-file fixture. Existing clearance tests skipped each bead's own rail.
+- **Persona Critique:** Coated steel must pass through the drill, not through timber.
+- **Acceptance Criterion:** Preserve all nodes and weave/spacing while actual bead shells clear their own tubes at 30/240/600 files.
+
+#### ISS-5.09 — Bundled Float16 dependency lacked its license notice
+
+- **Severity:** LOW
+- **Location:** `docs/vendor/oidn.js`, asset builder.
+- **Tool Evidence:** The OIDN bundle includes MIT-licensed `@petamoriken/float16` 3.9.3 but had neither its author's notice in the bundle nor a separate license copy.
+- **Persona Critique:** Retain the notices of the specialist code being redistributed.
+- **Acceptance Criterion:** Copy the upstream notice during rebuilding, record the version and serve the license in the static export.
+
 ### Fixes
+
+#### FIX-5.09 → ISS-5.09
+
+- **Location:** Asset builder and vendor notices.
+- **Action Taken:** Added the unmodified upstream Float16 MIT license and locked dependency provenance.
+- **Tool Verification:** Asset rebuilding and static license serving checks cover the added notice.
+
+#### FIX-5.06 → ISS-5.06
+
+- **Location:** `docs/finish-normals.js`, `docs/bead-materials.js`, `test/finish-normals.test.mjs`.
+- **Action Taken:** Corrected the row-to-UV derivative and factored height-to-normal conversion for an independent analytic regression. Retuned gloss/paint relief against the real toy reference; reduced the block's over-rounded silhouette.
+- **Tool Verification:** Analytic sine-height derivatives agree with decoded normals across both axes and wrap boundaries; existing bore/winding/envelope checks pass.
+
+#### FIX-5.07 → ISS-5.07
+
+- **Location:** `docs/photo-denoising.js`, `docs/photo-guides.js`, photographic renderer, asset builder and validation.
+- **Action Taken:** Added local guided OIDN with linear HDR/albedo and encoded shading normals, 1600-pixel exports, full convergence captures, revision cancellation and owned-device disposal.
+- **Tool Verification:** Real FP16 WGSL inference completes at 256 samples in overview/close/mobile; linear albedo and normal convention probes pass. PNG exports, missing-model fallback and cancellation during initialization/inference pass. The network has zero active jobs after completion and zero tracked buffers after disposal. No external HTTP is used.
+
+#### FIX-5.08 → ISS-5.08
+
+- **Location:** `docs/bead-layout.js`, `test/bead-threading.test.mjs`.
+- **Action Taken:** Reject placement candidates on bends exceeding the bore's radial margin, using precomputed arc lengths. The geometry and node counts are retained.
+- **Tool Verification:** Actual shell/tube BVH intersections fail before the fix at 240/600 files and pass after it at 30/240/600. Other spacing and weave tests pass.
 
 #### FIX-5.05 → ISS-5.05
 
