@@ -6,7 +6,7 @@ import { createPhotoDenoising, readLinearImage } from "./photo-denoising.js";
 import { renderPhotoGuides } from "./photo-guides.js";
 import { createPhotoStage } from "./photo-stage.js";
 
-export function createPhotograph(THREE, container, sourceCamera, getContent, stopMotion) {
+export function createPhotograph(THREE, container, sourceCamera, getContent, stopMotion, materialsReady = Promise.resolve()) {
   const button = document.getElementById("studio-photo");
   const save = document.getElementById("save-photo");
   const status = document.getElementById("photo-status");
@@ -154,7 +154,8 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
     container.dataset.photo = "preparing";
     stopMotion();
     try {
-      const { StudioPathTracer, PhysicalCamera, GradientEquirectTexture, DenoiseMaterial, FullScreenQuad } = await import("./vendor/pathtracer.js");
+      const [vendor] = await Promise.all([import("./vendor/pathtracer.js"), materialsReady]);
+      const { StudioPathTracer, PhysicalCamera, GradientEquirectTexture, DenoiseMaterial, FullScreenQuad } = vendor;
       if (request !== generation) return;
       renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true, powerPreference: "high-performance" });
       if (!renderer.capabilities.isWebGL2 || !renderer.extensions.has("EXT_color_buffer_float")) { fail(); return; }

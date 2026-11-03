@@ -8,7 +8,7 @@ The default entry point opens the generated codebase map. **Studio photo** progr
 
 The 30-file fixture before the surrounding studio sweep and coating-scale correction: [earlier interactive preview](maze-fidelity/studio-preview.jpg) · [converged guided studio photograph](maze-fidelity/studio.png) · [1600-pixel close-up](maze-fidelity/studio-close.png). Modeling, placement and materials also changed, so this is not an isolated denoiser comparison or a blind comparison against a real toy. The photographs use the Apple single-layer finish described in [the tool notes](vendor/fidelity-libraries.md). The photographic suite writes fresh hero, close, low and mobile captures to `.scratch/verification/photographic/`.
 
-The current [paint-finish close capture](maze-fidelity/paint-finish-close.png) uses supported poses, the surrounding sweep and an authored periodic paint height field. Surface variation remains visible after 256 samples and guided OIDN, unlike the prior subpixel noise. It still reads as a render; the full photographic requirement remains open. Captured-HDRI experiments were evaluated and rejected for this production stage, as documented in [the lighting research](maze-3d-tools-research.md#photographed-studio-illumination--evaluated-not-adopted).
+The [paint-finish close capture at 50c57a2](maze-fidelity/paint-finish-close.png) uses supported poses, the surrounding sweep and an authored periodic paint height field. Surface variation remains visible after 256 samples and guided OIDN, unlike the prior subpixel noise. The newer [plywood-stack low capture](maze-fidelity/plywood-stack-low.png) uses a full-stack hybrid edge material. Both still read as renders; the full photographic requirement remains open. Captured-HDRI experiments were evaluated and rejected for this production stage, as documented in [the lighting research](maze-3d-tools-research.md#photographed-studio-illumination--evaluated-not-adopted).
 
 ## Selected Persona
 
@@ -140,7 +140,36 @@ The current [paint-finish close capture](maze-fidelity/paint-finish-close.png) u
 - **Persona Critique:** Paint detail should retain a shared authored basis across the interactive, traced and guide surfaces.
 - **Acceptance Criterion:** Finite orthonormal shared tangents on final bead/board UVs, preserved by actual tracer preparation; unchanged physical geometry and draw groups; fresh guided captures.
 
+#### ISS-5.15 — One coarse plywood veneer repeated across the entire edge
+
+- **Severity:** MEDIUM
+- **Location:** `bead-materials.js`, board UV chart.
+- **Tool Evidence:** The 128×64 tile repeated every 3.25 mm. A 29 mm specimen rendered about nine broad identical stripes. Fixed-camera 256-sample/OIDN comparisons of that baseline, a 21-layer hybrid, and a richer hybrid showed reduced stripe dominance but incomplete cut-grain detail. The generated 30-file low view was screened too. Manufacturer references motivate a thin-veneer stack; they do not establish an exact 32 mm catalog product.
+- **Persona Critique:** Decorative stripes do not supply distinct veneer detail, and a full-stack atlas needs a chart that closes around corners.
+- **Acceptance Criterion:** Declared full-thickness stack, distinct layers and narrow separate bond masks, continuous perimeter phase, supported independent normals, unchanged physical geometry, fresh rendered close/low inspection and loading/fallback recovery. Full photographic equivalence remains separate.
+
+#### ISS-5.16 — Packed texture sampling crossed the full-stack V boundary
+
+- **Severity:** LOW
+- **Location:** Plywood map sampling; pinned `RenderTarget2DArray`.
+- **Tool Evidence:** The source requested clamp wrapping, but the tracer's packed array repeats both axes. Opposite color rows differ by up to 18 RGB levels. A real GPU probe comparing clamped-source and packed-array samples at both V boundaries measured a maximum difference of 11 levels, with opaque nonblack samples.
+- **Persona Critique:** Filtering must not borrow a veneer from the opposite edge of the panel.
+- **Acceptance Criterion:** Shared texel-centre guarded sampling; real packed/source border samples agree within 8-bit quantization, with normal/bake/lifecycle checks retained.
+
 ### Fixes
+
+#### FIX-5.16 → ISS-5.16
+
+- **Location:** Plywood color/normal texture transforms and `finish-review.mjs`.
+- **Action Taken:** Inset V sampling by half a 1K texel and scale it between the two edge texel centres in both renderers. Keep the full-stack geometry chart and physical board unchanged. The pinned packer restores these texture matrices after copying pixels.
+- **Tool Verification:** The actual GPU source-versus-packed test reduced maximum boundary difference from 11 to 1 RGB level across 64 paired sample positions. Alpha was 255 and maximum color 164, rejecting an empty/black probe. This is a narrow edge-sampling check, not a whole-image photographic verdict.
+
+#### FIX-5.15 → ISS-5.15
+
+- **Location:** `plywood-finish.js`, board factory, material/photograph readiness and bake/verification scripts.
+- **Action Taken:** Bake an authored 32 mm / 21-ply photo-derived hybrid from the existing CC0 maple source, with distinct layer offsets/tints, separate narrow bond masks and independently authored shallow relief. Map the whole thickness once and close nominal 160 mm repeats around the sampled board perimeter. Keep the original board/support geometry. Await settled texture readiness before allocating a photo renderer; errors/deadlines get valid fallback pixels, and late images retain that settled fallback.
+- **Tool Verification:** Three legacy board fixture hashes preserve positions, normals and draw groups; identity indexing and shared tangent tests pass. Actual browser tests exercise delayed textures, cancel/rescan, corrupt inputs, deadlines, late results and real traced samples. Source/output hashes are pinned; two local bakes produced identical PNGs. Finished low/close exports were inspected at 256 samples with guided OIDN.
+- **Limits:** Face imagery does not recover end-grain anatomy or adjacent-edge grain parity. The 32 mm fabrication, 0.06 mm visual bonds, color rescaling and micrometre relief are authored, not measured. The first hybrid still looked too uniform; the richer candidate is a partial material improvement. ISS-5.01 remains open. See [construction sources and experiment](plywood-construction-research.md).
 
 #### FIX-5.14 → ISS-5.14
 
@@ -154,7 +183,7 @@ The current [paint-finish close capture](maze-fidelity/paint-finish-close.png) u
 - **Location:** `bead-materials.js`, `finish-normals.js`, `paint-finish.js` and the geometry repeat constant.
 - **Action Taken:** Replace plywood's unsupported bump with a tangent normal map from an independently authored shallow relief field, accounting for different horizontal/vertical texel pitches. Replace paint's fine random height/roughness coupling with a smooth periodic millimetre-height field and independent roughness. Keep the 32 mm repeat shared with the geometry. No geometry or support pose changes.
 - **Tool Verification:** The real browser factory and pinned encoder carry both normal maps, unit normal scales and no bump-only maps. Independent numerical tests decode paint normals against physical height slopes, including periodic boundaries. The production 256-sample/OIDN close export completed without browser errors and retained visible paint detail.
-- **Limits:** Paint height RMS is an authored 18.50 μm, not a measured scan. The plywood albedo still repeats a single procedural layer. More visible texture is not proof of photographic equivalence; the close image remains synthetic under ISS-5.01. See [the material research](plywood-fidelity-research.md).
+- **Limits:** Paint height RMS is an authored 18.50 μm, not a measured scan. At this repair the plywood albedo still repeated a single layer, subsequently replaced under ISS-5.15. More visible texture is not proof of photographic equivalence; the close image remains synthetic under ISS-5.01. See [the material research](plywood-fidelity-research.md).
 
 #### FIX-5.12 → ISS-5.12
 

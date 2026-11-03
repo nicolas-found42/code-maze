@@ -66,4 +66,16 @@ const weights = await readFile("docs/vendor/oidn-rt_hdr_alb_nrm.tza");
 if (weights.byteLength !== 1841160 || createHash("sha256").update(weights).digest("hex") !== "e586ef2ff48d7fbb7611986405220ed8fc5c13ca79bfc40be4dc742fbf959e1a") {
   throw new Error("Pinned OIDN guide model differs; verify its source and license before rebuilding.");
 }
+const plywood = JSON.parse(await readFile("docs/vendor/plywood-finish.json", "utf8"));
+for (const name of ["docs/vendor/white_maple_veneer_diff_1k.jpg", "docs/plywood-finish.js", "docs/finish-normals.js", "scripts/bake-plywood.mjs"]) {
+  if (createHash("sha256").update(await readFile(name)).digest("hex") !== plywood.inputs[name]) {
+    throw new Error(`Plywood authoring input differs: ${name}; rebake with node scripts/bake-plywood.mjs.`);
+  }
+}
+for (const name of ["docs/vendor/birch_ply_edge_color_1k.png", "docs/vendor/birch_ply_edge_normal_1k.png"]) {
+  const bytes = await readFile(name), expected = plywood.outputs[name];
+  if (bytes.length !== expected?.bytes || createHash("sha256").update(bytes).digest("hex") !== expected.sha256) {
+    throw new Error(`Pinned plywood asset differs: ${name}; verify before rebaking.`);
+  }
+}
 console.log("Built offline fidelity tools with one external Three module.");

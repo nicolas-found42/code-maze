@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import * as THREE from "three";
-import { createBeadGeometries, mapBoardUVs } from "../docs/bead-geometry.js";
+import { createBeadGeometries, createBoardGeometry } from "../docs/bead-geometry.js";
 
 const geometries = createBeadGeometries(THREE);
 for (const [index, geometry] of geometries.entries()) {
@@ -40,15 +41,35 @@ for (const [index, geometry] of geometries.entries()) {
   });
 }
 
-test("veneer thickness and face grain keep world scale across board sizes", () => {
-  for (const size of [700, 1600]) {
-    const shape = new THREE.Shape([new THREE.Vector2(0, 0), new THREE.Vector2(size, 0), new THREE.Vector2(size, 650), new THREE.Vector2(0, 650)]);
-    const geometry = new THREE.ExtrudeGeometry(shape, { depth: 26, bevelEnabled: false });
-    geometry.rotateX(-Math.PI / 2);
-    mapBoardUVs(geometry);
-    const position = geometry.attributes.position, uv = geometry.attributes.uv;
-    for (const group of geometry.groups) for (let i = group.start; i < group.start + group.count; i++) {
-      assert.ok(Math.abs(uv.getY(i) - (group.materialIndex === 0 ? -position.getZ(i) / 420 : position.getY(i) / 3.25)) < 0.001);
+test("full-stack board charts close around the perimeter without changing physical geometry", () => {
+  // Captured from the former inline construction at50c57a2, before moving it.
+  const cases = [[180, 180, "35dad9f903a80492659ac9398064442497b95838dd860b5866f9b616a2f25f6a"],
+    [700, 650, "eb8fe6b94d5678531cf57ad9bcd0ce6857af9ee4e5e1176a0951aaa32d182b79"],
+    [1600, 900, "5e45e54dd84b4e1de121c626e949a11505d9666c689d1759d233960a8e3aea84"]];
+  for (const [width, depth, expected] of cases) {
+    const geometry = createBoardGeometry(THREE, width, depth);
+    const hash = createHash("sha256");
+    for (const key of ["position", "normal"]) {
+      const data = geometry.attributes[key].array;
+      hash.update(Buffer.from(data.buffer, data.byteOffset, data.byteLength));
     }
+    hash.update(JSON.stringify(geometry.groups)); assert.equal(hash.digest("hex"), expected);
+    const position = geometry.attributes.position, uv = geometry.attributes.uv;
+    const seams = new Map(); let closedSeam = false;
+    for (const group of geometry.groups) for (let i = group.start; i < group.start + group.count; i++) {
+      assert.ok(Math.abs(uv.getY(i) - (group.materialIndex === 0 ? -position.getZ(i) / 420 : (position.getY(i) + 3) / 32)) < 1e-6);
+      if (group.materialIndex !== 1) continue;
+      assert.ok(uv.getY(i) >= 0 && uv.getY(i) <= 1);
+      const key = [position.getX(i), position.getY(i), position.getZ(i)].join(","), previous = seams.get(key);
+      if (previous !== undefined) {
+        const difference = uv.getX(i) - previous;
+        assert.ok(Math.abs(difference - Math.round(difference)) < 1e-5, "duplicate seam positions retain texture phase");
+        if (Math.abs(difference) > 0.99) closedSeam = true;
+      }
+      seams.set(key, uv.getX(i));
+    }
+    assert.ok(closedSeam, "the perimeter chart actually unwraps and closes at a seam");
+    assert.deepEqual([...geometry.index.array], Array.from({ length: position.count }, (_, i) => i));
+    geometry.dispose();
   }
 });

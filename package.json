@@ -15,6 +15,7 @@
     "preview": "node scripts/server.mjs --directory dist",
     "test:ui": "node scripts/ui-review.mjs",
     "assets:3d": "node scripts/bake-bead.mjs && node scripts/vendor-3d.mjs",
+    "bake:plywood": "node scripts/bake-plywood.mjs",
     "test:fidelity": "node scripts/fidelity-review.mjs",
     "test:studio": "node scripts/studio-review.mjs",
     "test:photographic": "node scripts/photographic-review.mjs",

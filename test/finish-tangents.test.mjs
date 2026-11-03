@@ -2,19 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
 import { StaticGeometryGenerator } from "three-gpu-pathtracer/src/core/utils/StaticGeometryGenerator.js";
-import { createBeadGeometries, mapBoardUVs } from "../docs/bead-geometry.js";
+import { createBeadGeometries, createBoardGeometry } from "../docs/bead-geometry.js";
 
 test("painted geometry retains an orthonormal shared tangent basis through actual tracer preparation", () => {
-  const board = new THREE.ExtrudeGeometry(new THREE.Shape([
-    new THREE.Vector2(-100, -80), new THREE.Vector2(100, -80),
-    new THREE.Vector2(100, 80), new THREE.Vector2(-100, 80),
-  ]), { depth: 26, bevelEnabled: true, bevelSize: 4, bevelThickness: 3, bevelSegments: 4 });
-  board.rotateX(-Math.PI / 2);
-  const positions = board.attributes.position.array.slice(), normals = board.attributes.normal.array.slice(), groups = structuredClone(board.groups);
-  mapBoardUVs(board);
-  assert.deepEqual(board.attributes.position.array, positions);
-  assert.deepEqual(board.attributes.normal.array, normals);
-  assert.deepEqual(board.groups, groups);
+  const board = createBoardGeometry(THREE, 200, 180);
   assert.deepEqual([...board.index.array], Array.from({ length: board.attributes.position.count }, (_, i) => i));
   for (const geometry of [...createBeadGeometries(THREE), board]) {
     const original = geometry.attributes.tangent;

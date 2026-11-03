@@ -1,5 +1,6 @@
 import blockData from "./vendor/bead-block.js";
 import { PAINT_REPEAT } from "./paint-finish.js";
+import { PLY_HEIGHT, PLY_REPEAT } from "./plywood-finish.js";
 
 const COATING_REPEAT = PAINT_REPEAT;
 
@@ -98,14 +99,53 @@ export function createBeadGeometries(THREE) {
   return [turned(sphere, 32), block, turned(barrel, 12), ringGeometry, turned(spool, 15)];
 }
 
-// ExtrudeGeometry's default world-space UVs are unsuitable for a plywood edge.
-// Use real distances: one grain tile spans 420 units, one veneer spans 3.25.
-export function mapBoardUVs(geometry) {
+export function createBoardGeometry(THREE, width, depth) {
+  const shape = new THREE.Shape();
+  const w = width / 2, d = depth / 2, r = 32;
+  shape.moveTo(-w + r, -d); shape.lineTo(w - r, -d); shape.quadraticCurveTo(w, -d, w, -d + r);
+  shape.lineTo(w, d - r); shape.quadraticCurveTo(w, d, w - r, d); shape.lineTo(-w + r, d);
+  shape.quadraticCurveTo(-w, d, -w, d - r); shape.lineTo(-w, -d + r); shape.quadraticCurveTo(-w, -d, -w + r, -d);
+  const geometry = new THREE.ExtrudeGeometry(shape, { depth: PLY_HEIGHT - 6, bevelEnabled: true, bevelSize: 4, bevelThickness: 3, bevelSegments: 4, curveSegments: 14 });
+  geometry.rotateX(-Math.PI / 2);
+  const outline = shape.getPoints(14).map(point => ({ x: point.x, z: -point.y }));
+  if (Math.hypot(outline[0].x - outline.at(-1).x, outline[0].z - outline.at(-1).z) < 1e-6) outline.pop();
+  mapBoardUVs(geometry, outline);
+  return geometry;
+}
+
+// Project side vertices onto the actual sampled outline, including the bevel
+// offsets. Whole perimeter repeats close the texture phase at the chart seam.
+function mapBoardUVs(geometry, outline) {
+  const segments = [];
+  let perimeter = 0;
+  for (let i = 0; i < outline.length; i++) {
+    const a = outline[i], b = outline[(i + 1) % outline.length];
+    const dx = b.x - a.x, dz = b.z - a.z, length = Math.hypot(dx, dz);
+    if (length === 0) continue;
+    segments.push({ a, dx, dz, length, start: perimeter }); perimeter += length;
+  }
+  const turns = Math.max(1, Math.round(perimeter / PLY_REPEAT));
+  function edgeU(x, z) {
+    let closest = Infinity, along = 0;
+    for (const segment of segments) {
+      const { a, dx, dz, length, start } = segment;
+      const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / (length * length)));
+      const distance = (x - a.x - dx * t) ** 2 + (z - a.z - dz * t) ** 2;
+      if (distance < closest) { closest = distance; along = start + t * length; }
+    }
+    return along / perimeter * turns;
+  }
   const position = geometry.getAttribute("position"), uv = geometry.getAttribute("uv");
   for (const group of geometry.groups) for (let i = group.start; i < group.start + group.count; i++) {
     const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
-    uv.setXY(i, group.materialIndex === 0 ? x / 420 : (x + z) / 420,
-      group.materialIndex === 0 ? -z / 420 : y / 3.25);
+    uv.setXY(i, group.materialIndex === 0 ? x / 420 : edgeU(x, z),
+      group.materialIndex === 0 ? -z / 420 : (y + 3) / PLY_HEIGHT);
+  }
+  for (const group of geometry.groups.filter(g => g.materialIndex === 1)) for (let i = group.start; i < group.start + group.count; i += 3) {
+    const values = [0, 1, 2].map(j => uv.getX(i + j));
+    if (Math.max(...values) - Math.min(...values) > turns / 2) {
+      for (let j = 0; j < 3; j++) if (values[j] < turns / 2) uv.setX(i + j, values[j] + turns);
+    }
   }
   uv.needsUpdate = true;
   finishTangents(geometry);

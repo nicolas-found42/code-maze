@@ -1,11 +1,33 @@
-import { normalsFromHeight } from "./finish-normals.js";
 import { createPaintFinish } from "./paint-finish.js";
+import { PLY_SIZE } from "./plywood-finish.js";
 
 export function createToyMaterials(THREE, renderer, invalidate) {
   const loader = new THREE.TextureLoader();
+  const pending = [];
   const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-  function load(name, color = false) {
-    const texture = loader.load(`./vendor/${name}`, invalidate, undefined, invalidate);
+  function load(name, color = false, fallback = [255, 255, 255, 255]) {
+    let settled, finished = false, fallbackImage;
+    pending.push(new Promise(resolve => { settled = resolve; }));
+    const changed = () => {
+      if (finished) {
+        // TextureLoader assigns its image before this callback. A late image
+        // must not replace the stable fallback already packed by a photo.
+        if (fallbackImage) { texture.image = fallbackImage; texture.needsUpdate = true; }
+        return;
+      }
+      finished = true; clearTimeout(deadline); settled(); invalidate();
+    };
+    const failed = () => {
+      if (finished) return;
+      // Keep both renderers usable with valid neutral pixels after an asset
+      // error; never send an uninitialized image into the tracer's atlas.
+      const canvas = document.createElement("canvas"); canvas.width = canvas.height = 1;
+      const context = canvas.getContext("2d"), pixel = context.createImageData(1, 1);
+      pixel.data.set(fallback); context.putImageData(pixel, 0, 0);
+      fallbackImage = canvas; texture.image = canvas; texture.needsUpdate = true; changed();
+    };
+    const texture = loader.load(`./vendor/${name}`, changed, undefined, failed);
+    const deadline = setTimeout(failed, 15000);
     if (color) texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.anisotropy = anisotropy;
@@ -13,36 +35,19 @@ export function createToyMaterials(THREE, renderer, invalidate) {
   }
   const wood = new THREE.MeshPhysicalMaterial({
     map: load("white_maple_veneer_diff_1k.jpg", true),
-    normalMap: load("white_maple_veneer_nor_gl_1k.jpg"), normalScale: new THREE.Vector2(0.18, 0.18),
+    normalMap: load("white_maple_veneer_nor_gl_1k.jpg", false, [128, 128, 255, 255]), normalScale: new THREE.Vector2(0.18, 0.18),
     roughnessMap: load("white_maple_veneer_rough_1k.jpg"),
     color: 0xfff5e5, roughness: 0.66, clearcoat: 0.18, clearcoatRoughness: 0.38, envMapIntensity: 0.45,
   });
-  // One repeating tile is one veneer; varying layers are mapped in world units.
-  const plyCanvas = document.createElement("canvas");
-  plyCanvas.width = 128; plyCanvas.height = 64;
-  const ctx = plyCanvas.getContext("2d");
-  const image = ctx.createImageData(128, 64);
-  const plyHeights = new Float32Array(128 * 64);
-  let seed = 7331;
-  let reliefSeed = 991;
-  const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
-  for (let y = 0; y < 64; y++) for (let x = 0; x < 128; x++) {
-    const seam = y < 5 || y > 60;
-    const grain = Math.sin(x * 0.22 + Math.sin(y * 0.08) * 2) * 4 + random() * 9;
-    const base = seam ? [145, 105, 63] : [211, 178, 130];
-    image.data.set([...base.map((v) => v + grain), 255], (y * 128 + x) * 4);
-    // Separately authored micrometre-scale fibre relief and a shallow glue
-    // recess. Dark albedo is not used as a displacement measurement.
-    const distance = Math.min(y, 64 - y) * 3.25 / 64;
-    reliefSeed = (Math.imul(reliefSeed, 1664525) + 1013904223) >>> 0;
-    plyHeights[y * 128 + x] = Math.sin(x * 0.22 + Math.sin(y * 0.08) * 2) * 0.004
-      + reliefSeed / 4294967296 * 0.006 - 0.015 * Math.exp(-((distance / 0.08) ** 2));
+  const plyMap = load("birch_ply_edge_color_1k.png", true, [217, 195, 156, 255]);
+  const plyNormal = load("birch_ply_edge_normal_1k.png", false, [128, 128, 255, 255]);
+  for (const texture of [plyMap, plyNormal]) {
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    // The pinned tracer's packed array always repeats. Keep both renderers
+    // between edge texel centres so filtering cannot borrow the opposite ply.
+    texture.repeat.y = (PLY_SIZE - 1) / PLY_SIZE;
+    texture.offset.y = 0.5 / PLY_SIZE;
   }
-  ctx.putImageData(image, 0, 0);
-  const plyMap = new THREE.CanvasTexture(plyCanvas);
-  plyMap.colorSpace = THREE.SRGBColorSpace;
-  plyMap.wrapS = plyMap.wrapT = THREE.RepeatWrapping;
-  plyMap.anisotropy = anisotropy;
   function normalTexture(data, width, height) {
     const canvas = document.createElement("canvas");
     canvas.width = width; canvas.height = height;
@@ -53,7 +58,6 @@ export function createToyMaterials(THREE, renderer, invalidate) {
     texture.anisotropy = anisotropy;
     return texture;
   }
-  const plyNormal = normalTexture(normalsFromHeight(plyHeights, 128, 64, 128 / (2 * 420), 64 / (2 * 3.25)), 128, 64);
   const ply = new THREE.MeshStandardMaterial({ map: plyMap, roughness: 0.68,
     normalMap: plyNormal, normalScale: new THREE.Vector2(1, 1) });
 
@@ -71,7 +75,7 @@ export function createToyMaterials(THREE, renderer, invalidate) {
   const boreMap = load("fine_grained_wood_col_1k.jpg", true);
   const bore = new THREE.MeshStandardMaterial({ color: 0xc49b67, map: boreMap, roughness: 0.78 });
   return {
-    wood, ply,
+    wood, ply, ready: Promise.all(pending),
     bead(color) {
       return [new THREE.MeshPhysicalMaterial({ color, roughness: 0.46, metalness: 0,
         clearcoat: 0.24, clearcoatRoughness: 0.21, envMapIntensity: 0.55,

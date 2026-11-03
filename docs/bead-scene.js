@@ -1,6 +1,6 @@
 import { createCanvasMaze } from "./bead-fallback.js";
 import { motion } from "./playground-motion.js";
-import { createBeadGeometries, createSupportGeometry, mapBoardUVs } from "./bead-geometry.js";
+import { createBeadGeometries, createBoardGeometry, createSupportGeometry } from "./bead-geometry.js";
 import { createBeadSeating, seatingInput } from "./bead-seating-client.js";
 import { createToyMaterials } from "./bead-materials.js";
 import { createStudioRendering } from "./bead-rendering.js";
@@ -77,7 +77,7 @@ export function createMaze(container, onSelect) {
   photograph = createPhotograph(THREE, container, camera, () => content, () => {
     stopEffects();
     for (const mesh of meshes) mesh.scale.setScalar(1);
-  });
+  }, toyMaterials.ready);
   container.dataset.shading = "direct";
   createStudioRendering(THREE, renderer, scene, camera, container, invalidate).then((next) => {
     studio = next;
@@ -301,14 +301,8 @@ export function createMaze(container, onSelect) {
       graph = next; selected = undefined; hovered = undefined; halo.visible = false;
       labelLayer.replaceChildren(); labels = []; meshes = []; rails = [];
       content = new THREE.Group(); scene.add(content);
-      const shape = new THREE.Shape();
-      const w = graph.width / 2, d = graph.depth / 2, r = 32;
-      shape.moveTo(-w + r, -d); shape.lineTo(w - r, -d); shape.quadraticCurveTo(w, -d, w, -d + r);
-      shape.lineTo(w, d - r); shape.quadraticCurveTo(w, d, w - r, d); shape.lineTo(-w + r, d);
-      shape.quadraticCurveTo(-w, d, -w, d - r); shape.lineTo(-w, -d + r); shape.quadraticCurveTo(-w, -d, -w + r, -d);
-      const boardGeometry = new THREE.ExtrudeGeometry(shape, { depth: 26, bevelEnabled: true, bevelSize: 4, bevelThickness: 3, bevelSegments: 4, curveSegments: 14 });
-      boardGeometry.rotateX(-Math.PI / 2);
-      mapBoardUVs(boardGeometry);
+      const w = graph.width / 2, d = graph.depth / 2;
+      const boardGeometry = createBoardGeometry(THREE, graph.width, graph.depth);
       const board = new THREE.Mesh(boardGeometry, [wood, ply]);
       board.position.y = 8; board.castShadow = true; board.receiveShadow = true; content.add(board);
       for (const x of [-w + 45, w - 45]) for (const z of [-d + 45, d - 45]) {
