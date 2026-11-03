@@ -1,0 +1,44 @@
+# Bead maze: focused 3D tooling research
+
+Checked 2026-11-03 against upstream source. Recommendation: combine **N8AO contact shading**, **pmndrs/postprocessing**, and **a small library of genuinely bored, softened bead meshes**. Add CSG only to generate shapes that cannot be expressed cleanly with a lathe. This targets the toy's missing contact depth and manufactured edges without changing its plain JavaScript architecture.
+
+## Discovery provenance
+
+[AxiomeCG/awesome-threejs](https://github.com/AxiomeCG/awesome-threejs#tools) lists three-mesh-bvh and three-bvh-csg, plus the React and Svelte postprocessing wrappers; its resources also list ambientCG PBR textures. Following those projects leads to the vanilla postprocessing library and its N8AO integration. [Pico's awesome-webxr-development](https://github.com/Pico-Developer/awesome-webxr-development) independently lists realism-effects. An awesome listing is discovery evidence, not proof of performance or adoption.
+
+## Candidate comparison
+
+| Tool | Concrete contribution | Compatibility and tradeoff |
+| --- | --- | --- |
+| [N8AO](https://github.com/N8python/n8ao) | Occlusion where beads hug rails, bores darken, grommets meet wood, and feet meet the table. Recent upstream includes optional neural denoising. | Current source package 2.0.1 declares Three >=0.137 and postprocessing >=6.30.0, encompassing local r160, but README recommends r161+ and requires WebGL2. Treat that as a smoke-test requirement. Start with ordinary Medium quality; benchmark neural modes separately. |
+| [postprocessing](https://github.com/pmndrs/postprocessing) | A composer for N8AO plus a deliberate final antialias/color stage. | [6.35.3 manifest](https://github.com/pmndrs/postprocessing/blob/v6.35.3/package.json) declares Three >=0.152.0 <0.164.0, so it explicitly includes r160. Pin it rather than installing latest against the old vendor. Adds render targets and GPU cost. |
+| [three-bvh-csg](https://github.com/gkjohnson/three-bvh-csg) | Subtract a cylinder from a rounded block to obtain an actual through-hole; cache the result once per bead type. | [0.0.16 manifest](https://github.com/gkjohnson/three-bvh-csg/blob/v0.0.16/package.json) declares Three >=0.151 and BVH >=0.6.6. Use matching pinned dependencies. Upstream labels the implementation experimental and documents manifold geometry constraints; do not Boolean every node or frame. |
+| [realism-effects](https://github.com/0beqz/realism-effects) | SSGI, reflections and temporal reconstruction could produce more ambitious lighting. | Defer: upstream documents incomplete physical-material features including clearcoat and proper alpha support. This maze relies on clearcoat and selection transparency. Temporal effects also need more frame scheduling than its current render-on-demand loop. |
+| [three-gpu-pathtracer](https://github.com/gkjohnson/three-gpu-pathtracer) | A future settled-camera photographic export with indirect lighting. | Current [manifest](https://github.com/gkjohnson/three-gpu-pathtracer/blob/main/package.json) is 0.0.28 and requires Three >=0.187 and BVH >=0.9.17. [Changelog](https://github.com/gkjohnson/three-gpu-pathtracer/blob/main/CHANGELOG.md) records WebGPU introduction in September 2026 and WebGL deprecation. It is not a drop-in r160 enhancement. |
+
+## Evidence of use and maintenance
+
+N8AO is integrated in [react-postprocessing's actual pass implementation](https://github.com/pmndrs/react-postprocessing/blob/master/src/passes/N8AO.tsx), with dedicated documentation and tests: concrete ecosystem use beyond its own demo. CSG powers the separate [react-three-csg library](https://github.com/pmndrs/react-three-csg). These are stronger adoption signals than an awesome-list entry, but do not establish production deployment counts.
+
+GitHub's first-party repository API reported last pushes of **2026-08-10** for [N8AO](https://api.github.com/repos/N8python/n8ao), **2026-11-01** for [postprocessing](https://api.github.com/repos/pmndrs/postprocessing), and **2026-09-27** for [three-bvh-csg](https://api.github.com/repos/gkjohnson/three-bvh-csg). Push dates demonstrate recent repository activity, not release quality. Their observed stars were 504, 2,938 and 957 respectively; these modest counts justify calling the first and third specialized discoveries, not universally adopted standards.
+
+## Exact mashup for this repository
+
+At the research baseline, `docs/vendor/three.module.js` declared revision 160 and `package.json` did not manage Three. `docs/bead-scene.js` used `window.THREE`, event-driven rendering, physical clearcoat materials, a JPEG environment, and transparent materials for selection. Integrations must share the **same** Three module instance rather than silently bundle a second version.
+
+1. Keep the existing lathe route for rings and spherical beads, but close the profile with a continuous inner bore wall and soften the bore lip. For a rounded cube or unusual prism, generate a watertight rounded solid, subtract a slightly overlong bore using CSG, and cache one geometry. CSG is optional when analytic geometry already gives the desired shape.
+2. Preserve physically meaningful scale: rails have radius 4.8 and existing bores radius 7. Start AO radius around 12–24 local units and tune by screenshot comparison. This is a proposed scene-specific starting point, not a benchmark result.
+3. Use `RenderPass → N8AOPostPass → final antialias/output stage` with the pmndrs composer. Upstream explicitly distinguishes `N8AOPostPass` (requires a preceding RenderPass) from `N8AOPass` (replaces the Three addon RenderPass). See [N8AO usage](https://github.com/N8python/n8ao#usage).
+4. Preserve one color/tone-mapping conversion. N8AO documents gamma-correction interactions; verify painted colors against the unprocessed renderer. Avoid stacking the existing ACES exposure with an additional unplanned tone mapper.
+5. Leave N8AO accumulation disabled while retaining render-on-demand. Its [accumulation notes](https://github.com/N8python/n8ao#accumulation) warn that object motion is not detected. Its [transparency notes](https://github.com/N8python/n8ao#transparency) explain the extra render of transparent objects and possible artifacts with depth writes; explicitly test faded unselected beads and the halo.
+6. Pair shading with restrained roughness variation, correct grain direction and studio reflections. AmbientCG was discovered through the awesome list, but new external texture downloads should be chosen only after licensing and asset size checks for the selected files. More postprocessing cannot repair a visibly wrong bead silhouette.
+
+Before shipping, compare fixed-camera screenshots with AO on/off; verify bore silhouettes, rail contact, selection transparency, readable labels, resize and zoom. Benchmark a large graph on an integrated GPU. Keep the existing canvas fallback and use direct rendering if effect initialization fails. No performance claims are made here: these recommendations have not themselves been benchmarked in this repo.
+
+## Implemented and measured
+
+The shipped combination now uses N8AO 2.0.1, postprocessing 6.35.3, CSG 0.0.16 and BVH 0.8.3. A pinned authoring dependency on Three 0.160.0 matches the existing browser core. Five bored bead shapes share geometry; the rounded block is Boolean-baked. The review also found inward-facing lathe shells, corrected their winding, and independently tested exterior triangles and drill-axis rays. Studio PMREM reflections, timber bore materials, subtle paint structure, ash normal/roughness maps and world-scaled veneer UVs accompany the renderer changes.
+
+Neural-Medium is used on stages at least 700 CSS pixels wide, Low/Poisson below that. `npm run test:fidelity` exercises selection, responsive quality changes, missing optional assets, repeated rescans, runtime compositor failure/disposal and 600 nodes. One measured run on Chrome 156 / ANGLE Metal / Apple M5 Pro recorded synchronized orbit frames of 25, 14 and 13 ms for 600 nodes, with stable tracked GPU allocations across three rescans. These are local observations, not a cross-device benchmark or a guarantee of mobile performance. The [before](maze-fidelity/before.jpg) and [after](maze-fidelity/after.jpg) close views use the same 30-file fixture and camera inputs. Geometry/material improvements and shading both change those images; the pair does not isolate AO's contribution. The script additionally captures an identical-material/camera AO-off view in `.scratch/verification/fidelity/ao-off.jpg` for isolated inspection. Fitted camera depth bounds and explicit AO bias remove the self-occlusion stipple observed during integration.
+
+Rebuild details and license copies are [recorded alongside the assets](vendor/fidelity-libraries.md). This is a more detailed procedural toy, with visible model and contact improvements; no photographic-indistinguishability claim is made.

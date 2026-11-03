@@ -1,5 +1,8 @@
 import { createCanvasMaze } from "./bead-fallback.js";
 import { motion } from "./playground-motion.js";
+import { createBeadGeometries, mapBoardUVs } from "./bead-geometry.js";
+import { createToyMaterials } from "./bead-materials.js";
+import { createStudioRendering } from "./bead-rendering.js";
 export { positionGraph } from "./bead-layout.js";
 
 export function createMaze(container, onSelect) {
@@ -16,20 +19,20 @@ export function createMaze(container, onSelect) {
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xf6f3fc);
   const camera = new THREE.PerspectiveCamera(38, 1, 1, 100000);
-  scene.add(new THREE.HemisphereLight(0xfff8ee, 0x99734c, 2.0));
-  const key = new THREE.DirectionalLight(0xfff4de, 3.0);
+  scene.add(new THREE.HemisphereLight(0xfff8ee, 0x99734c, 0.85));
+  const key = new THREE.DirectionalLight(0xfff4de, 2.6);
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
   key.shadow.bias = -0.00025;
-  key.shadow.normalBias = 1.5;
+  key.shadow.normalBias = 0.35;
   scene.add(key, key.target);
-  const fill = new THREE.DirectionalLight(0xdce9ff, 1.4);
+  const fill = new THREE.DirectionalLight(0xdce9ff, 0.8);
   fill.position.set(-400, 450, -650);
   scene.add(fill);
   const labelLayer = document.createElement("div");
@@ -64,45 +67,17 @@ export function createMaze(container, onSelect) {
   motion.subscribe((enabled) => { if (!enabled) stopEffects(); });
 
   function invalidate() { if (!frame) frame = requestAnimationFrame(render); }
-  const loader = new THREE.TextureLoader();
-  const woodTexture = loader.load("./vendor/ash_veneer_diff_1k.jpg", invalidate);
-  woodTexture.colorSpace = THREE.SRGBColorSpace;
-  woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping;
-  woodTexture.repeat.set(1.7, 1.7);
-  const wood = new THREE.MeshStandardMaterial({ map: woodTexture, color: 0xe1bd8a, roughness: 0.57 });
-  const plyCanvas = document.createElement("canvas");
-  plyCanvas.width = 32; plyCanvas.height = 128;
-  const plyContext = plyCanvas.getContext("2d");
-  for (let y = 0; y < 128; y += 8) {
-    plyContext.fillStyle = y % 16 ? "#ad8050" : "#e4c59c";
-    plyContext.fillRect(0, y, 32, 8);
-  }
-  const plyTexture = new THREE.CanvasTexture(plyCanvas);
-  plyTexture.wrapS = plyTexture.wrapT = THREE.RepeatWrapping;
-  plyTexture.colorSpace = THREE.SRGBColorSpace;
-  const ply = new THREE.MeshStandardMaterial({ map: plyTexture, roughness: 0.72 });
-  const noiseCanvas = document.createElement("canvas");
-  noiseCanvas.width = noiseCanvas.height = 128;
-  const noiseContext = noiseCanvas.getContext("2d");
-  const noisePixels = noiseContext.createImageData(128, 128);
-  for (let i = 0; i < noisePixels.data.length; i += 4) {
-    const value = 170 + (i * 13 % 71);
-    noisePixels.data.set([value, value, value, 255], i);
-  }
-  noiseContext.putImageData(noisePixels, 0, 0);
-  const paintTexture = new THREE.CanvasTexture(noiseCanvas);
-  const environment = loader.load("./vendor/studio.jpg", () => {
-    environment.mapping = THREE.EquirectangularReflectionMapping;
-    scene.environment = environment;
+  const toyMaterials = createToyMaterials(THREE, renderer, invalidate);
+  const { wood, ply } = toyMaterials;
+  const sharedGeometry = createBeadGeometries(THREE);
+  let studio;
+  container.dataset.shading = "direct";
+  createStudioRendering(THREE, renderer, scene, camera, container, invalidate).then((next) => {
+    studio = next;
+    studio?.resize(container.clientWidth, container.clientHeight);
     invalidate();
-  });
-  environment.colorSpace = THREE.SRGBColorSpace;
-  const boredBead = (profile, segments) => new THREE.LatheGeometry([...profile, profile[0]].map(([x, y]) => new THREE.Vector2(x, y)), segments);
-  const sharedGeometry = [
-    boredBead([[7, 21], [13, 20], [20, 13], [23, 0], [20, -13], [13, -20], [7, -21]], 28),
-    boredBead([[7, 16], [22, 16], [23, 12], [23, -12], [22, -16], [7, -16]], 6),
-    boredBead([[7, 12], [22, 12], [25, 5], [25, -5], [22, -12], [7, -12]], 28),
-  ];
+  }).catch(() => { container.dataset.shading = "direct"; invalidate(); });
+  /* Shared model resources live for the viewer lifetime. */
   const sharedMaterials = new Set([wood, ply]);
   function dispose(group) {
     group.traverse((object) => {
@@ -144,7 +119,17 @@ export function createMaze(container, onSelect) {
   function render() {
     frame = undefined;
     if (halo.visible) halo.quaternion.copy(camera.quaternion);
-    renderer.render(scene, camera);
+    if (studio) {
+      try { studio.render(); }
+      catch {
+        studio.dispose(); studio = null;
+        renderer.setRenderTarget(null);
+        renderer.autoClear = true;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        container.dataset.shading = "direct";
+        renderer.render(scene, camera);
+      }
+    } else renderer.render(scene, camera);
     layoutLabels();
   }
   function orient() {
@@ -178,11 +163,17 @@ export function createMaze(container, onSelect) {
       radius *= THREE.MathUtils.clamp(Math.max(maxX - minX, maxY - minY) / 1.8, 0.75, 1.15);
       orient();
     }
+    // Keep depth precision proportional to the toy, including large maps.
+    // A fixed 1..100000 frustum made depth-derived AO normals visibly noisy.
+    camera.near = Math.max(1, radius * 0.01);
+    camera.far = radius * 4 + graph.extent * 4;
+    camera.updateProjectionMatrix();
     invalidate();
   }
   function resize() {
     if (!container.clientWidth || !container.clientHeight) return;
     renderer.setSize(container.clientWidth, container.clientHeight);
+    studio?.resize(container.clientWidth, container.clientHeight);
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
     fit(); invalidate();
@@ -301,11 +292,9 @@ export function createMaze(container, onSelect) {
       shape.lineTo(w, d - r); shape.quadraticCurveTo(w, d, w - r, d); shape.lineTo(-w + r, d);
       shape.quadraticCurveTo(-w, d, -w, d - r); shape.lineTo(-w, -d + r); shape.quadraticCurveTo(-w, -d, -w + r, -d);
       const boardGeometry = new THREE.ExtrudeGeometry(shape, { depth: 26, bevelEnabled: true, bevelSize: 4, bevelThickness: 3, bevelSegments: 4, curveSegments: 14 });
-      const uv = boardGeometry.getAttribute("uv");
-      for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / graph.width, uv.getY(i) / graph.depth);
       boardGeometry.rotateX(-Math.PI / 2);
+      mapBoardUVs(boardGeometry);
       const board = new THREE.Mesh(boardGeometry, [wood, ply]);
-      plyTexture.repeat.set(2, graph.depth / 26);
       board.position.y = 8; board.castShadow = true; board.receiveShadow = true; content.add(board);
       for (const x of [-w + 45, w - 45]) for (const z of [-d + 45, d - 45]) {
         const foot = new THREE.Mesh(new THREE.CylinderGeometry(20, 22, 12, 24), new THREE.MeshStandardMaterial({ color: 0x302820, roughness: 0.9 }));
@@ -317,8 +306,8 @@ export function createMaze(container, onSelect) {
       for (const edge of graph.edges) { degrees.set(edge.source, degrees.get(edge.source) + 1); degrees.set(edge.target, degrees.get(edge.target) + 1); }
       for (const rail of graph.rails) {
         const curve = new THREE.CatmullRomCurve3(rail.points.map((point) => new THREE.Vector3(...point)));
-        const material = new THREE.MeshPhysicalMaterial({ color: rail.color, roughness: 0.3, metalness: 0.12, clearcoat: 0.8, envMapIntensity: 0.65 });
-        const wire = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.min(800, Math.max(200, rail.points.length)), 4.8, 10, false), material);
+        const material = toyMaterials.wire(rail.color);
+        const wire = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.min(800, Math.max(200, rail.points.length)), 4.8, 16, false), material);
         wire.castShadow = true; wire.receiveShadow = true; wire.userData.group = rail.group;
         content.add(wire); rails.push(wire);
         for (const point of [rail.points[0], rail.points.at(-1)]) {
@@ -330,7 +319,7 @@ export function createMaze(container, onSelect) {
         addLabel(rail.label, rail.labelPosition, "track");
       }
       graph.nodes.forEach((node, index) => {
-        const material = new THREE.MeshPhysicalMaterial({ color: node.color, roughness: 0.4, metalness: 0, clearcoat: 0.42, clearcoatRoughness: 0.28, envMapIntensity: 0.55, bumpMap: paintTexture, bumpScale: 0.09, transparent: true });
+        const material = toyMaterials.bead(node.color);
         const mesh = new THREE.Mesh(sharedGeometry[index % sharedGeometry.length], material);
         mesh.position.set(node.x, node.y, node.z);
         mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(...node.tangent));
@@ -364,8 +353,16 @@ export function createMaze(container, onSelect) {
       for (const mesh of meshes) {
         const active = mesh.userData.id === id;
         mesh.scale.setScalar(active ? 1.14 : 1);
-        mesh.material.opacity = !id || neighbors.has(mesh.userData.id) ? 1 : 0.38;
-        mesh.material.emissive.set(active ? 0x5b3910 : 0);
+        for (const material of mesh.material) {
+          const faded = Boolean(id) && !neighbors.has(mesh.userData.id);
+          if (material.transparent !== faded) { material.transparent = faded; material.needsUpdate = true; }
+          material.depthWrite = !faded;
+          // N8AO's automatic transparency detection does not inspect material
+          // arrays. Explicitly route faded paint + bore through its overlay pass.
+          mesh.userData.cannotReceiveAO = faded;
+          material.opacity = faded ? 0.38 : 1;
+          material.emissive.set(active ? 0x2b1906 : 0);
+        }
         if (active) halo.position.copy(mesh.position);
         if (active) effects.push(motion.animate(mesh.scale, { x: [1.55, 1.14], y: [1.55, 1.14], z: [1.55, 1.14], duration: 650, ease: "outElastic(1, .5)", onUpdate: invalidate }));
       }

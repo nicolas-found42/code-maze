@@ -23,6 +23,10 @@ Choose **Show me how** for a three-step discovery through a real file reference.
 
 The maze mixes tall upright loops, compact corkscrews, and low winding paths around a shared core. Differently angled loops surround corkscrew coils, and winding tracks cross beneath both. Placement requires the corkscrews to pass through loop openings while preserving clearance for beads and wires. Large directories are split across tracks with at most 18 files each. Larger maps use neighboring sections of up to 12 mixed tracks on the same wooden base. Beads stay threaded along their tracks, and crossings stay separate in depth.
 
+The toy uses five drilled bead shapes, including a rounded block baked with BVH CSG. Bare timber lines the holes; satin paint, veneer grain, layered plywood edges, and studio reflections give the maze depth as you orbit. N8AO adds contact shading, using its neural denoiser on wide stages and a lighter preset on narrow ones. All assets ship locally. [Tool research](docs/maze-3d-tools-research.md) and [pinned tools, licenses, and asset rebuilding](docs/vendor/fidelity-libraries.md) explain the combination.
+
+Compare the same fixture and camera: [before](docs/maze-fidelity/before.jpg) · [after](docs/maze-fidelity/after.jpg).
+
 The server binds to `127.0.0.1`. Scanning reads files locally and does not execute repository code or send source to a service. Only map metadata is returned to the browser; source text stays out of the graph.
 
 ## Save and export a map
@@ -71,6 +75,7 @@ npm test
 npm run build
 npm run smoke
 npm run test:ui
+npm run test:fidelity
 ```
 
 The tests cover module resolution, nested ignore rules, non-JavaScript references, cycles, limits, missing paths, and API behavior. Layout tests check that every bead is threaded onto an anchored track and that beads have physical clearance. Independent checks derived from the generated vertices verify that corkscrews thread tall-loop openings and low winding paths pass beneath both other track types.
@@ -78,6 +83,8 @@ The tests cover module resolution, nested ignore rules, non-JavaScript reference
 The browser smoke check uses installed Google Chrome. It covers generated WebGL rendering, direct bead hover and picking, selection labels, label toggling, reset, search, failed scans, rescanning, mobile canvas fallback, and the static export. Screenshots go to `.scratch/verification/`. To use Playwright's Chromium instead, run `npx playwright install chromium` and then `BROWSER_CHANNEL=chromium npm run smoke`.
 
 The UI review also uses Chrome (or `BROWSER_CHANNEL=chromium`). It exercises the guided discovery, keyboard navigation, empty searches, responsive layouts, live reduced-motion preferences, empty and disconnected maps, self-references, and missing effect libraries. Axe checks WCAG A/AA rules in desktop, selected, mobile-tour, and fallback states.
+
+The fidelity review captures fixed-camera hero, close, low, selected and mobile views, checks shader errors and responsive denoiser switching, verifies stable GPU resource counts after rescans, exercises a 600-file map, and checks interaction with unavailable studio tools/textures. Screenshots and frame measurements go to `.scratch/verification/fidelity/`. Frame measurements describe the local test machine, not a cross-device performance guarantee. Geometry tests independently raycast every bore and check shell winding and layout clearance. Rebuild the pinned modeling/rendering assets with `npm run assets:3d` after installing development dependencies.
 
 The active implementation lives in:
 
@@ -87,6 +94,7 @@ The active implementation lives in:
 - `docs/codebase-map.js`: scan controls, file search, and selection.
 - `docs/bead-layout.js`: continuous directory tracks, bead spacing, positions, and tangents.
 - `docs/bead-scene.js`: Three.js rendering, camera fitting, labels, picking, and reference highlights.
+- `docs/bead-geometry.js`, `bead-materials.js`, `bead-rendering.js`: drilled bead models, timber and paint materials, and the optional studio/N8AO pipeline.
 - `docs/bead-fallback.js`: canvas fallback using the same graph.
 - `docs/discovery-guide.js`: the three-step reference discovery and mobile instructions.
 - `docs/playground-motion.js`: optional effects and motion preferences.
