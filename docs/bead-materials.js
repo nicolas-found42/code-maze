@@ -35,9 +35,11 @@ export function createToyMaterials(THREE, renderer, invalidate) {
   }
   const wood = new THREE.MeshPhysicalMaterial({
     map: load("white_maple_veneer_diff_1k.jpg", true),
-    normalMap: load("white_maple_veneer_nor_gl_1k.jpg", false, [128, 128, 255, 255]), normalScale: new THREE.Vector2(0.18, 0.18),
+    normalMap: load("white_maple_veneer_nor_gl_1k.jpg", false, [128, 128, 255, 255]), normalScale: new THREE.Vector2(0.85, 0.85),
     roughnessMap: load("white_maple_veneer_rough_1k.jpg"),
-    color: 0xfff5e5, roughness: 0.66, clearcoat: 0.18, clearcoatRoughness: 0.38, envMapIntensity: 0.45,
+    // Corpus: satin blonde hardwood — a honey tint deep enough that the veneer
+    // grain still reads under the tracer's bright softboxes.
+    color: 0xecd9b8, roughness: 0.62, clearcoat: 0.08, clearcoatRoughness: 0.5, envMapIntensity: 0.5,
   });
   const plyMap = load("birch_ply_edge_color_1k.png", true, [217, 195, 156, 255]);
   const plyNormal = load("birch_ply_edge_normal_1k.png", false, [128, 128, 255, 255]);
@@ -73,15 +75,28 @@ export function createToyMaterials(THREE, renderer, invalidate) {
   paintTexture.anisotropy = anisotropy;
   const paintNormal = normalTexture(finish.normal, finish.size, finish.size);
   const boreMap = load("fine_grained_wood_col_1k.jpg", true);
-  const bore = new THREE.MeshStandardMaterial({ color: 0xc49b67, map: boreMap, roughness: 0.78 });
+  const bore = new THREE.MeshStandardMaterial({ color: 0xc9a06b, map: boreMap, roughness: 0.7 });
+  let beadsSeen = 0;
   return {
     wood, ply, ready: Promise.all(pending),
     bead(color) {
-      return [new THREE.MeshPhysicalMaterial({ color, roughness: 0.46, metalness: 0,
-        clearcoat: 0.24, clearcoatRoughness: 0.21, envMapIntensity: 0.55,
-        normalMap: paintNormal, normalScale: new THREE.Vector2(1, 1), roughnessMap: paintTexture }), bore.clone()];
+      // Painted wood: satin shell with mild orange-peel, not lacquer gloss.
+      // Real beads vary: drift hue and lightness slightly per bead so runs of
+      // one color read as separate painted pieces, not one injection mold.
+      const paint = new THREE.Color(color);
+      const hsl = { h: 0, s: 0, l: 0 };
+      paint.getHSL(hsl);
+      const drift = (Math.sin(hsl.h * 977 + hsl.l * 131 + ++beadsSeen * 0.618) + 1) / 2;
+      paint.setHSL(
+        (hsl.h + (drift - 0.5) * 0.035 + 1) % 1,
+        THREE.MathUtils.clamp(hsl.s + (drift - 0.5) * 0.2, 0, 1),
+        THREE.MathUtils.clamp(hsl.l * (0.86 + drift * 0.28), 0, 1),
+      );
+      return [new THREE.MeshPhysicalMaterial({ color: paint, roughness: 0.48, metalness: 0,
+        clearcoat: 0.14, clearcoatRoughness: 0.4, envMapIntensity: 0.42,
+        normalMap: paintNormal, normalScale: new THREE.Vector2(1.6, 1.6), roughnessMap: paintTexture }), bore.clone()];
     },
-    wire(color) { return new THREE.MeshPhysicalMaterial({ color, roughness: 0.23, metalness: 0.05,
-      clearcoat: 0.45, clearcoatRoughness: 0.17, envMapIntensity: 0.35 }); },
+    wire(color) { return new THREE.MeshPhysicalMaterial({ color, roughness: 0.34, metalness: 0.02,
+      clearcoat: 0.3, clearcoatRoughness: 0.2, envMapIntensity: 0.55 }); },
   };
 }

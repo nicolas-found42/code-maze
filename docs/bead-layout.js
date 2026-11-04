@@ -36,20 +36,23 @@ function connector(points, a, b, upA, upB) {
   }
 }
 
-function makeTrack(kind, rank, counts, sequence) {
+function makeTrack(kind, rank, counts, sequence, members = 18) {
+  // Compact the track for sparse runs so few-bead rails read like real toys
+  // instead of long bare wires; dense runs keep the full footprint.
+  const fit = Math.min(1, Math.max(0.6, 0.62 + members / 26));
   const points = [];
   let from, to, opening;
   if (kind === "tall-loop") {
-    const radius = 250 + rank * 65;
-    const cx = 130, cy = 145 + radius, cz = 80 + rank * 65;
+    const radius = Math.round((250 + rank * 65) * fit);
+    const cx = 130, cy = 165 + radius, cz = 80 + rank * 65;
     opening = { center: [cx, cy, cz], radius };
     const loop = [];
     for (let i = 0; i <= 320; i++) {
       const angle = -Math.PI / 2 + 0.24 + (Math.PI * 2 - 0.48) * i / 320;
       loop.push([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle), cz + 75 * Math.sin(angle * 2)]);
     }
-    const start = [cx + 105 + rank * 65, 42, cz - 130];
-    const end = [cx - 105 - rank * 65, 42, cz + 130];
+    const start = [cx + (105 + rank * 65) * fit, 37.5, cz - 130];
+    const end = [cx - (105 + rank * 65) * fit, 37.5, cz + 130];
     connector(points, start, loop[0], [start[0], 105, start[2]], [loop[0][0] + 55, loop[0][1] - 12, loop[0][2] - 40]);
     from = points.length - 1;
     points.push(...loop.slice(1));
@@ -57,11 +60,11 @@ function makeTrack(kind, rank, counts, sequence) {
     connector(points, loop.at(-1), end, [loop.at(-1)[0] - 55, loop.at(-1)[1] - 12, loop.at(-1)[2] + 40], [end[0], 105, end[2]]);
   } else if (kind === "corkscrew") {
     const phase = rank / counts.corkscrew * Math.PI * 2;
-    const cx = -190, cz = -95, radius = Math.max(170, counts.corkscrew * 45);
-    const rise = Math.max(330, counts.corkscrew * 120);
+    const cx = -190, cz = -95, radius = Math.round(Math.max(170, counts.corkscrew * 45) * fit);
+    const rise = Math.max(520, counts.corkscrew * 160);
     for (let i = 0; i <= 32; i++) {
       const t = i / 32, angle = phase - Math.PI / 4 + Math.PI / 4 * t * t;
-      points.push([cx + radius * Math.cos(angle), 42 + 70 * t, cz + radius * Math.sin(angle)]);
+      points.push([cx + radius * Math.cos(angle), 37.5 + 70 * t, cz + radius * Math.sin(angle)]);
     }
     from = points.length - 1;
     for (let i = 1; i <= 320; i++) {
@@ -71,13 +74,15 @@ function makeTrack(kind, rank, counts, sequence) {
     }
     to = points.length - 1;
     const top = points.at(-1), angle = phase + Math.PI * 3.4 + Math.PI / 2;
-    const end = [cx + (radius + 105) * Math.cos(angle), 42, cz + (radius + 105) * Math.sin(angle)];
+    const end = [cx + (radius + 105 * fit) * Math.cos(angle), 37.5, cz + (radius + 105 * fit) * Math.sin(angle)];
     connector(points, top, end, [top[0] - Math.sin(angle - Math.PI / 2) * 160, top[1] + 110, top[2] + Math.cos(angle - Math.PI / 2) * 160], [end[0], top[1] + 70, end[2]]);
   } else {
     for (let i = 0; i <= 320; i++) {
       const t = i / 320;
-      points.push([-340 * Math.cos(Math.PI * 3 * t) + rank * 70 * Math.cos(Math.PI * t),
-        i === 0 || i === 320 ? 42 : 42 + (105 + rank * 68) * Math.sin(Math.PI * t), -280 + 560 * t + rank * 30]);
+      // Horizontal span compacts with fit; the vertical climb stays full so the
+      // first bead slots keep bore-plus-shell clearance above the board top.
+      points.push([-340 * Math.cos(Math.PI * 3 * t) * fit + rank * 70 * Math.cos(Math.PI * t) * fit,
+        i === 0 || i === 320 ? 37.5 : 42 + (105 + rank * 68) * Math.sin(Math.PI * t), -280 + 560 * t + rank * 30]);
     }
     from = 0; to = points.length - 1;
   }
@@ -87,12 +92,12 @@ function makeTrack(kind, rank, counts, sequence) {
   const tilt = sequence * 2.399963229728653;
   function transform(point) {
     const x = point[0] - origin[0], z = point[2] - origin[1];
-    return [x * Math.cos(yaw) - z * Math.sin(yaw) + (point[1] - 42) * lean * Math.cos(tilt), point[1],
-      x * Math.sin(yaw) + z * Math.cos(yaw) + (point[1] - 42) * lean * Math.sin(tilt)];
+    return [x * Math.cos(yaw) - z * Math.sin(yaw) + (point[1] - 37.5) * lean * Math.cos(tilt), point[1],
+      x * Math.sin(yaw) + z * Math.cos(yaw) + (point[1] - 37.5) * lean * Math.sin(tilt)];
   }
   for (let i = 0; i < points.length; i++) points[i] = transform(points[i]);
   if (opening) opening = { ...opening, center: transform(opening.center), axis: [Math.cos(yaw), Math.sin(yaw)], lean: [lean * Math.cos(tilt), lean * Math.sin(tilt)] };
-  return { points, beadStart: from, beadEnd: to, poseAngle: tilt, opening };
+  return { points, beadStart: from, beadEnd: to, poseAngle: tilt, opening, fitScale: fit };
 }
 
 function closest(point, a, b) {
@@ -181,30 +186,46 @@ function placeTrack(rail, space, peers) {
       height: Math.max(...main.map((point) => point[1])) };
   });
   const turns = [0, Math.PI / 12, -Math.PI / 12, Math.PI / 6, -Math.PI / 6, Math.PI / 4, -Math.PI / 4];
+  // Real toys spread anchors across the whole board instead of crowding the
+  // center, so rank poses by the gap at their centroid, then fully validate
+  // only the widest handful. First fit would pile rails onto the middle.
+  const poses = [];
   for (let radius = 0; radius <= 768; radius += 32) {
     for (const turn of turns) {
-      const rotate = (x, z) => [x * Math.cos(turn) - z * Math.sin(turn), x * Math.sin(turn) + z * Math.cos(turn)];
-      const rotated = original.map((point) => { const [x, z] = rotate(point[0], point[2]); return [x, point[1], z]; });
       for (let step = 0; step < (radius ? 24 : 1); step++) {
         const angle = rail.poseAngle + step / 24 * Math.PI * 2;
+        const mid = original[Math.floor(original.length / 2)];
+        const [x, z] = [mid[0] * Math.cos(turn) - mid[2] * Math.sin(turn), mid[0] * Math.sin(turn) + mid[2] * Math.cos(turn)];
         const dx = Math.cos(angle) * radius, dz = Math.sin(angle) * radius;
-        const points = rotated.map((point) => [point[0] + dx, point[1], point[2] + dz]);
-        let opening;
-        if (rail.opening) {
-          const center = rotate(rail.opening.center[0], rail.opening.center[2]);
-          opening = { ...rail.opening, center: [center[0] + dx, rail.opening.center[1], center[1] + dz],
-            axis: rotate(...rail.opening.axis), lean: rotate(...rail.opening.lean) };
-        }
-        if (rail.kind === "corkscrew" && loops.length && !loops.some((loop) => threadsOpening(points.slice(rail.beadStart, rail.beadEnd + 1), loop.opening))) continue;
-        if (opening && corks.length && !corks.some((cork) => threadsOpening(cork.points.slice(cork.beadStart, cork.beadEnd + 1), opening))) continue;
-        if (rail.kind === "low-winding" && cores.length && !cores.some((core) => points.some((point) => Math.hypot(point[0] - core.x, point[2] - core.z) < 120 && point[1] < core.height * 0.6))) continue;
-        if (points.some((point) => (space.nearest(point)?.distance ?? Infinity) < 26)) continue;
-        rail.points = points; rail.opening = opening;
-        return;
+        poses.push({ radius, turn, angle, gap: space.nearest([x + dx, mid[1], z + dz])?.distance ?? Infinity });
       }
     }
   }
-  throw new Error(`Cannot weave ${rail.id} with physical track clearance.`);
+  poses.sort((a, b) => (b.gap - a.gap) || (a.radius - b.radius));
+  let chosen = null;
+  for (const pose of poses) {
+    const rotate = (x, z) => [x * Math.cos(pose.turn) - z * Math.sin(pose.turn), x * Math.sin(pose.turn) + z * Math.cos(pose.turn)];
+    const rotated = original.map((point) => { const [x, z] = rotate(point[0], point[2]); return [x, point[1], z]; });
+    const dx = Math.cos(pose.angle) * pose.radius, dz = Math.sin(pose.angle) * pose.radius;
+    const points = rotated.map((point) => [point[0] + dx, point[1], point[2] + dz]);
+    let opening;
+    if (rail.opening) {
+      const center = rotate(rail.opening.center[0], rail.opening.center[2]);
+      opening = { ...rail.opening, center: [center[0] + dx, rail.opening.center[1], center[1] + dz],
+        axis: rotate(...rail.opening.axis), lean: rotate(...rail.opening.lean) };
+    }
+    if (rail.kind === "corkscrew" && loops.length && !loops.some((loop) => threadsOpening(points.slice(rail.beadStart, rail.beadEnd + 1), loop.opening))) continue;
+    if (opening && corks.length && !corks.some((cork) => threadsOpening(cork.points.slice(cork.beadStart, cork.beadEnd + 1), opening))) continue;
+    if (rail.kind === "low-winding" && cores.length && !cores.some((core) => points.some((point) => Math.hypot(point[0] - core.x, point[2] - core.z) < 120 && point[1] < core.height * 0.6))) continue;
+    // Label crowding on sparse maps is handled in the scene (sparse maps
+    // keep every label visible); tracks pack with the tuned clearance.
+    if (points.some((point) => (space.nearest(point)?.distance ?? Infinity) < 26)) continue;
+    chosen = { points, opening };
+    break;
+  }
+  if (!chosen) throw new Error(`Cannot weave ${rail.id} with physical track clearance.`);
+  rail.points = chosen.points;
+  rail.opening = chosen.opening;
 }
 
 export function positionGraph(graph) {
@@ -219,10 +240,10 @@ export function positionGraph(graph) {
   const stationCount = Math.ceil(batches.length / 12);
   const counts = Array.from({ length: stationCount }, (_, station) => Object.fromEntries(kinds.map((kind) => [kind, batches.slice(station * 12, station * 12 + 12).filter((batch) => batch.kind === kind).length])));
   const ranks = counts.map(() => Object.fromEntries(kinds.map((kind) => [kind, 0])));
-  const rails = batches.map(({ group, part, parts, kind }, index) => {
+  const rails = batches.map(({ group, part, parts, kind, members: batchMembers }, index) => {
     const station = Math.floor(index / 12);
     return { id: `${group.id}:${part}`, group: group.id, label: parts > 1 ? `${group.label} ${part}/${parts}` : group.label,
-      color: group.color, kind, station, ...makeTrack(kind, ranks[station][kind]++, counts[station], index % 12) };
+      color: group.color, kind, station, ...makeTrack(kind, ranks[station][kind]++, counts[station], index % 12, batchMembers.length) };
   });
   const stations = Array.from({ length: stationCount }, (_, station) => rails.filter((rail) => rail.station === station));
   const boxes = [];
@@ -279,7 +300,7 @@ export function positionGraph(graph) {
         x: placement.position[0], y: placement.position[1], z: placement.position[2], tangent: placement.tangent });
     });
   });
-  const width = Math.max(700, ...rails.flatMap((rail) => rail.points.map((point) => Math.abs(point[0]) * 2 + 90)));
-  const depth = Math.max(650, ...rails.flatMap((rail) => rail.points.map((point) => Math.abs(point[2]) * 2 + 90)));
+  const width = Math.max(700, ...rails.flatMap((rail) => rail.points.map((point) => Math.abs(point[0]) * 2 + 60)));
+  const depth = Math.max(650, ...rails.flatMap((rail) => rail.points.map((point) => Math.abs(point[2]) * 2 + 60)));
   return { ...graph, nodes, rails, width, depth, extent: Math.max(width, depth) / 2 };
 }

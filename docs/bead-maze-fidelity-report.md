@@ -292,6 +292,16 @@ The associated paint experiment evaluated object-space axial fibres at authored 
 
 ISS-5.01 is open. A fresh unchanged clean pass and `review.py gate` have not been reached. Continue with close-view manufacturing/material detail and multi-angle photographic comparison, retaining the full original goal. The existing unit, browser interaction, accessibility and fidelity checks pass; the progressive renderer has its own image/lifecycle suite. These are engineering checks, not an equivalence certificate.
 
+### Rubric quantification — 2026-11-03
+
+A fixed 23-parameter Jev rubric (`jev-1.14`) scored nine states per pass — six fixed-camera interactive views, the 256-sample studio saves, and two real corpus photos as controls — across five material/layout iterations. Runs are archived at `/private/tmp/code-maze-fidelity-review/rubric/rubric-runs.json`.
+
+- **Controls calibrate the bar:** real photos score 0.69–0.75 mean (`photo_or_render` 0.78–0.89).
+- **Repairs shipped:** corpus-calibrated satin materials (wood clearcoat 0.32→0.08, bead paint clearcoat 0.6 experiment reverted to 0.25 then eased to 0.14 with roughness 0.48, wires roughness 0.13→0.34 semi-gloss); muted paint palette (`#e24a3b`→`#c64639` and kin); sparse-run track compaction (fit 0.6–1.0) with a unit-tested 62 mm bead-slot clearance invariant; anchor tips seated in pads/grommets (non-bead tails 37.5, bead-bearing ends 42); per-bead paint hue/lightness drift; sparse maps (≤12 nodes) keep every label visible; studio sweep brightened (`0xf4f1e9`→`0xf7f4ed`); gap-priority track packing (poses ranked by centroid gap, then fully validated — rails spread across the base instead of piling on the center); GPU finishing pass shared by display and save (denoise → exposure/gamma → vignette → grain → ACES tonemapping).
+- **Measured movement:** interactive `wood_realism` 0.37→0.52–0.61; studio `anchoring` 0.67→0.80 after spread packing (interactive +0.19–0.24); `wire_diameter` 0.29–0.5→0.51–0.67; studio `composition` 0.67–0.77; studio `silhouette` 0.31→0.51–0.66; studio means 0.40→0.43–0.45 (studio-hero trajectory 0.397→0.41→0.44→0.447 across four scoring passes).
+- **Remaining deficit:** `paint_realism` 0.10–0.23 (controls 0.8), `sensor_realism` 0.06–0.13, `micro_imperfection` 0.10–0.28 — flat across three consecutive scoring passes, i.e. converged for the current feature set. Named next levers: sensor simulation (depth of field bokeh, chromatic aberration), edge-wear/chipping texture per bead, bead density via slot spacing (blocked by the 54 mm envelope invariant).
+- **Status:** unit, smoke, build, UI, photographic (including the linear-albedo guide re-pinned to the new sweep albedo), studio and fidelity suites pass on the final tree. `photo_or_render` 0.06–0.15 versus 0.78–0.89 for real photos; ISS-5.01 remains open.
+
 ## Verdict
 
 The earlier experiment displayed real product photographs in `docs/bead-maze-photo3d.html`. Its recorded similarity measurements compare resampled photographic pixels against their own sources. They measure resampling fidelity, **not** the realism of generated geometry. The historical model scores below have not been independently reproduced in this review.

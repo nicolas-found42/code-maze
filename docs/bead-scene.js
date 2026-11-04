@@ -98,6 +98,8 @@ export function createMaze(container, onSelect) {
     const point = position.clone().project(camera);
     return { x: (point.x + 1) / 2 * container.clientWidth, y: (1 - point.y) / 2 * container.clientHeight, visible: point.z > -1 && point.z < 1 };
   }
+  // Sparse toys have room for every file name; only dense maps must cull.
+  let sparseLabels = false;
   function layoutLabels() {
     const occupied = [];
     const ordered = [...labels].sort((a, b) => {
@@ -116,7 +118,7 @@ export function createMaze(container, onSelect) {
       const y = point.y - height;
       const box = { x, y, right: x + width, bottom: y + height };
       const overlap = occupied.some((item) => box.x < item.right + 5 && box.right > item.x - 5 && box.y < item.bottom + 4 && box.bottom > item.y - 4);
-      const visible = point.visible && y > 5 && y + height < container.clientHeight - 5 && (!overlap || active);
+      const visible = point.visible && y > 5 && y + height < container.clientHeight - 5 && (!overlap || active || sparseLabels);
       label.element.hidden = !visible;
       if (!visible) continue;
       label.element.style.transform = `translate(${x}px, ${y}px)`;
@@ -321,11 +323,12 @@ export function createMaze(container, onSelect) {
         for (const point of [rail.points[0], rail.points.at(-1)]) {
           const pad = new THREE.Mesh(new THREE.CylinderGeometry(18, 19, 5, 24), new THREE.MeshStandardMaterial({ color: rail.color, roughness: 0.55 }));
           pad.position.set(point[0], 36, point[2]); pad.receiveShadow = true; content.add(pad);
-          const grommet = new THREE.Mesh(new THREE.TorusGeometry(7, 2.5, 10, 24), new THREE.MeshStandardMaterial({ color: 0x302e29, metalness: 0.5, roughness: 0.4 }));
+          const grommet = new THREE.Mesh(new THREE.TorusGeometry(8, 3.2, 12, 28), new THREE.MeshStandardMaterial({ color: 0x302e29, metalness: 0.5, roughness: 0.4 }));
           grommet.rotation.x = -Math.PI / 2; grommet.position.set(point[0], 40, point[2]); content.add(grommet);
         }
         addLabel(rail.label, rail.labelPosition, "track");
       }
+      sparseLabels = graph.nodes.length <= 12;
       graph.nodes.forEach((node, index) => {
         const material = toyMaterials.bead(node.color);
         const mesh = new THREE.Mesh(sharedGeometry[index % sharedGeometry.length], material);

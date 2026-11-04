@@ -12,7 +12,7 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
   const status = document.getElementById("photo-status");
   let generation = 0, renderer, tracer, camera, frame, timer, environment, floor, denoise;
   let active = false, stageSpan = 0;
-  let neural, neuralQuad, neuralTexture, photoScene, refining = false, refined = false, revision = 0;
+  let neural, finishQuad, spatialTarget, grainTexture, neuralTexture, photoScene, refining = false, refined = false, revision = 0;
   const splitGeometries = new Map();
   const photoMaterials = new Map();
   const LIMIT = 256;
@@ -25,7 +25,9 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
     stageSpan = 0;
     neural?.dispose(); neural = undefined;
     neuralTexture?.dispose(); neuralTexture = undefined;
-    neuralQuad?.material.dispose(); neuralQuad?.dispose(); neuralQuad = undefined;
+    finishQuad?.material.dispose(); finishQuad?.dispose(); finishQuad = undefined;
+    spatialTarget?.dispose(); spatialTarget = undefined;
+    grainTexture?.dispose(); grainTexture = undefined;
     refining = refined = false;
     photoScene = undefined;
     clearTimeout(timer);
@@ -56,6 +58,16 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
   }
 
   function fail() { close("Studio photo unavailable on this device. You can still explore the map."); }
+  // The single photographic finish: draws `image` through tone curve, edge
+  // rolloff and sensor grain onto the displayed canvas — the same pixels the
+  // save handler downloads.
+  function finish(image, aspect) {
+    if (!finishQuad) return;
+    finishQuad.material.uniforms.tDiffuse.value = image;
+    finishQuad.material.uniforms.uAspect.value = aspect;
+    renderer.setRenderTarget(null);
+    finishQuad.render(renderer);
+  }
 
   function size() {
     // Bound memory and shader cost independently of display DPR / huge screens.
@@ -131,12 +143,11 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
     } catch { /* The spatially denoised photograph remains usable. */ }
     if (!active || request !== revision) return;
     container.dataset.photoDenoising = "spatial";
-    if (output) try {
+      if (output) try {
         neuralTexture = new THREE.DataTexture(output.data, output.width, output.height, THREE.RGBAFormat, THREE.FloatType);
         neuralTexture.flipY = true;
         neuralTexture.needsUpdate = true;
-        neuralQuad.material.map = neuralTexture;
-        neuralQuad.render(renderer);
+        finish(neuralTexture, renderer.getDrawingBufferSize(new THREE.Vector2()).x / renderer.getDrawingBufferSize(new THREE.Vector2()).y);
         container.dataset.photoDenoising = "oidn";
       } catch { neuralTexture?.dispose(); neuralTexture = undefined; }
     refining = false; refined = true;
@@ -196,13 +207,13 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
 
       const scene = new THREE.Scene();
       photoScene = scene;
-      scene.background = new THREE.Color(0xf4f1e9);
+      scene.background = new THREE.Color(0xf7f4ed);
       environment = new GradientEquirectTexture(128);
-      environment.topColor.set(0xc5d4e3);
-      environment.bottomColor.set(0x9d8c75);
+      environment.topColor.set(0xf7f9fb);
+      environment.bottomColor.set(0xeae4d8);
       environment.update();
       scene.environment = environment;
-      scene.environmentIntensity = 0.22;
+      scene.environmentIntensity = 0.55;
       // Clone transforms, preserving the exact generated drilled geometry and
       // material groups. No photo, fixture toy, or replacement model is loaded.
       const model = getContent().clone(true);
@@ -243,6 +254,8 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
           if (singleLayer && material.isMeshPhysicalMaterial) {
             material.roughness += (material.clearcoatRoughness - material.roughness) * material.clearcoat;
             material.clearcoat = 0;
+            // The merged single lobe must keep the enamel's specular punch.
+            material.envMapIntensity = (material.envMapIntensity ?? 1) + 0.25;
           }
           photoMaterials.set(mesh.material, material);
         }
@@ -262,9 +275,9 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
         light.lookAt(center);
         scene.add(light);
       }
-      softbox(0xfff0dc, 5.5, 1.3, 1.1, [-0.8, 1.25, 0.7]);
-      softbox(0xddeaff, 2.2, 0.75, 1.2, [1, 0.65, 0.3]);
-      softbox(0xffffff, 4, 1.1, 0.7, [0.2, 0.9, -1]);
+      softbox(0xfff0dc, 6.5, 1.3, 1.1, [-0.8, 1.25, 0.7]);
+      softbox(0xddeaff, 2.6, 0.75, 1.2, [1, 0.65, 0.3]);
+      softbox(0xffffff, 5, 1.1, 0.7, [0.2, 0.9, -1]);
       camera = new PhysicalCamera();
       tracer = new StudioPathTracer(renderer);
       tracer.bounces = 6;
@@ -276,10 +289,58 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
       tracer.tiles.set(2, 2);
       tracer.textureSize.set(1024, 1024);
       denoise = new FullScreenQuad(new DenoiseMaterial({ sigma: 2, kSigma: 1, threshold: 0.08 }));
-      neuralQuad = new FullScreenQuad(new THREE.MeshBasicMaterial({ depthTest: false, depthWrite: false, blending: THREE.NoBlending }));
+      // One photographic finish serves both the displayed canvas and the saved
+      // PNG, so what you see is exactly what downloads: gentle tone curve, a
+      // natural edge rolloff and fine sensor grain.
+      finishQuad = new FullScreenQuad(new THREE.ShaderMaterial({
+        depthTest: false, depthWrite: false,
+        uniforms: {
+          tDiffuse: { value: null },
+          tGrain: { value: null },
+          uGrainScale: { value: 3 },
+          uAspect: { value: 1 },
+        },
+        vertexShader: `varying vec2 vUv;
+          void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+        fragmentShader: `uniform sampler2D tDiffuse; uniform sampler2D tGrain;
+          uniform float uGrainScale; uniform float uAspect;
+          varying vec2 vUv;
+          void main() {
+            vec3 color = texture2D(tDiffuse, vUv).rgb;
+            color = clamp((color - 0.5) * 1.03 + 0.51, 0.0, 1.0);
+            float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+            color = clamp(mix(vec3(luma), color, 1.02), 0.0, 1.0);
+            vec2 offset = vUv - 0.5; offset.x *= uAspect;
+            color *= mix(1.0, 0.94, smoothstep(0.38, 0.78, length(offset)));
+            float grain = texture2D(tGrain, vUv * uGrainScale).r - 0.5;
+            color = clamp(color + grain * 0.05, 0.0, 1.0);
+            gl_FragColor = vec4(color, 1.0);
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
+          }`,
+      }));
+      const grainCanvas = document.createElement("canvas");
+      grainCanvas.width = grainCanvas.height = 256;
+      const grainContext = grainCanvas.getContext("2d");
+      const grainPixels = grainContext.createImageData(256, 256);
+      for (let i = 0; i < grainPixels.data.length; i += 4) {
+        const value = 118 + Math.round((Math.random() + Math.random() + Math.random() - 1.5) * 42);
+        grainPixels.data[i] = grainPixels.data[i + 1] = grainPixels.data[i + 2] = value;
+        grainPixels.data[i + 3] = 255;
+      }
+      grainContext.putImageData(grainPixels, 0, 0);
+      const grainTexture = new THREE.CanvasTexture(grainCanvas);
+      grainTexture.wrapS = grainTexture.wrapT = THREE.RepeatWrapping;
+      finishQuad.material.uniforms.tGrain.value = grainTexture;
       tracer.renderToCanvasCallback = (target) => {
+        // Spatial denoise into an intermediate buffer, then the shared finish.
+        const buffer = renderer.getDrawingBufferSize(new THREE.Vector2());
+        spatialTarget ??= new THREE.WebGLRenderTarget(buffer.x, buffer.y, { type: THREE.HalfFloatType });
+        if (spatialTarget.width !== buffer.x || spatialTarget.height !== buffer.y) spatialTarget.setSize(buffer.x, buffer.y);
         denoise.material.map = target.texture;
+        renderer.setRenderTarget(spatialTarget);
         denoise.render(renderer);
+        finish(spatialTarget.texture, buffer.x / buffer.y);
       };
       tracer.setScene(scene, camera);
       updateCamera();
@@ -290,6 +351,8 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
   save.addEventListener("click", () => {
     const current = renderer;
     if (!current) return;
+    // The displayed canvas already carries the shared photographic finish, so
+    // the download is exactly what you see.
     current.domElement.toBlob((blob) => {
       if (!blob) return;
       const url = URL.createObjectURL(blob);

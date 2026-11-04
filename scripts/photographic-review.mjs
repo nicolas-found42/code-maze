@@ -65,7 +65,7 @@ try {
     assert.equal(observed.runtime.gpuEngine, 'wgsl');
     assert.equal(observed.runtime.activeExecutionCount, 0);
     assert.ok(observed.runtime.lastExecution.tileCount > 0);
-    assert.ok(Math.abs(observed.guides.albedo[0] - 0.90466) < 0.01, 'floor albedo stays linear, without sRGB or ACES conversion');
+    assert.ok(Math.abs(observed.guides.albedo[0] - 0.9302) < 0.01, 'floor albedo stays linear, without sRGB or ACES conversion');
     observed.guides.expected.forEach((value, axis) => assert.ok(Math.abs(observed.guides.normal[axis] - value) < 0.005, 'floor/sweep normals match independent camera-ray intersections'));
     await page.locator('#scene').screenshot({ path: new URL(`${name}.png`, output).pathname });
     console.log(JSON.stringify({ view: name, width: observed.guides.width, height: observed.guides.height, precision: observed.runtime.precision, tiles: observed.runtime.lastExecution.tileCount, inferenceMs: observed.runtime.lastExecution.durationMs, resources: observed.runtime.resources }));

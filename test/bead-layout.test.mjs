@@ -20,10 +20,17 @@ test("the axis layout assigns every file, including isolated files, to an anchor
     // move perpendicular to it until their geometry reaches support.
     assert.ok(Math.hypot(node.x - position[0], node.y - position[1], node.z - position[2]) < 0.001);
     assert.ok(Math.abs(Math.hypot(...node.tangent) - 1) < 0.001);
+    // Pre-seating slot must clear the board top (37) by the bead shell drop:
+    // the seating worker rejects any initial bore that intersects the base.
+    assert.ok(node.y >= 62, `${node.id} slot clears the board top for seating`);
   }
   for (const rail of graph.rails) {
-    assert.equal(rail.points[0][1], 42);
-    assert.equal(rail.points.at(-1)[1], 42);
+    // Every wire terminates inside its base pad: the tip sits below the pad
+    // top so every run visually enters its collar. Terminal points never
+    // carry beads — slots start 3.5% along each rail's arc — and the binding
+    // clearance constraint is the bead-bearing interior datum, not the tip.
+    assert.ok(Math.abs(rail.points[0][1] - 37.5) < 1e-6, `${rail.id} starts inside its pad`);
+    assert.ok(Math.abs(rail.points.at(-1)[1] - 37.5) < 1e-6, `${rail.id} ends inside its pad`);
     for (const [x, , z] of rail.points) {
       assert.ok(Math.abs(x) < graph.width / 2);
       assert.ok(Math.abs(z) < graph.depth / 2);
