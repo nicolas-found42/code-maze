@@ -3,10 +3,13 @@ import { once } from "node:events";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { createApp } from "./server.mjs";
+import { writeFailureReport } from "../lib/review-report.mjs";
 
 // Exercise the actual browser material factory and the pinned tracer encoder.
 // This catches bump-only materials silently losing relief at the export seam.
 const app = createApp(); let browser;
+const output = new URL("../.scratch/verification/finish/", import.meta.url);
+const errors = [];
 try {
   app.listen(0, "127.0.0.1"); await once(app, "listening");
   const bundle = await build({
@@ -18,7 +21,7 @@ try {
   });
   browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || "chrome" });
   const page = await browser.newPage();
-  const errors = []; page.on("pageerror", e => errors.push(e.message));
+  page.on("pageerror", e => errors.push(e.message));
   page.on("console", m => { if (m.type() === "error") errors.push(m.text()); });
   await page.route("**/material-encoder.js", route => route.fulfill({ contentType: "text/javascript", body: bundle.outputFiles[0].text }));
   await page.goto(`http://127.0.0.1:${app.address().port}/docs/codebase-bead-maze.html`);
@@ -141,6 +144,9 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log("Browser material → pinned tracer normal encoding:", JSON.stringify(observed));
+} catch (error) {
+  await writeFailureReport(output.pathname, "finish-review", { error, errors });
+  throw error;
 } finally {
   await browser?.close(); app.closeAllConnections(); app.close();
 }

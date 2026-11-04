@@ -106,3 +106,14 @@ test("file limits are explicit, scans are deterministic, empty directories and c
   await assert.rejects(scanRepository(root, { maxFiles: 0 }), /maxFiles/);
   await assert.rejects(scanRepository(path.join(root, "missing")), /ENOENT/);
 });
+
+test("undecodable reference specifiers produce one bounded warning per file", async (t) => {
+  const root = await fixture(t, {
+    "a.js": "import './%zz%.js';\nimport '%EE%.js';\nimport './%qq%.js';\nimport './b.js';\n",
+    "b.js": "export const value = 1;",
+  });
+  const graph = await scanRepository(root);
+  const warnings = graph.warnings.filter((warning) => warning.includes("Undecodable reference specifier in a.js"));
+  assert.equal(warnings.length, 1, "repeated undecodable specifiers collapse into a single note");
+  assert.ok(graph.edges.some((edge) => edge.target === "b.js"), "decodable references still resolve");
+});

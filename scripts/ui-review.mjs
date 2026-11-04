@@ -6,6 +6,7 @@ import path from "node:path";
 import { chromium } from "playwright";
 import AxeBuilder from "@axe-core/playwright";
 import { createApp } from "./server.mjs";
+import { writeFailureReport } from "../lib/review-report.mjs";
 
 const fixture = await mkdtemp(path.join(os.tmpdir(), "code-maze-ui-"));
 const output = new URL("../.scratch/verification/", import.meta.url);
@@ -167,6 +168,9 @@ try {
   await page.screenshot({ path: new URL("ui-reviewed-desktop.png", output).pathname, fullPage: true });
   assert.deepEqual(errors, [], "no uncaught browser errors");
   console.log("UI review passed: keyboard guide, real reference direction, tour interruption, empty search, 320–1440px reflow, mobile guide, live reduced motion, saved motion choice, empty/isolated/self-reference maps, flat fallback, unavailable effects/storage, and zero WCAG A/AA axe violations in four states.");
+} catch (error) {
+  await writeFailureReport(output.pathname, "ui-review", { error, errors });
+  throw error;
 } finally {
   await browser?.close();
   app.closeAllConnections();

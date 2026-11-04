@@ -1,18 +1,24 @@
 import { createCanvasMaze } from "./bead-fallback.js";
 import { motion } from "./playground-motion.js";
 import { createBeadGeometries, createBoardGeometry, createSupportGeometry } from "./bead-geometry.js";
-import { createBeadSeating, seatingInput } from "./bead-seating-client.js";
+import { createBeadSeating, seatingInput, seatingCategory } from "./bead-seating-client.js";
 import { createToyMaterials } from "./bead-materials.js";
 import { createStudioRendering } from "./bead-rendering.js";
 import { createPhotograph } from "./bead-photograph.js";
 export { positionGraph } from "./bead-layout.js";
 
-export function createMaze(container, onSelect) {
+export function createMaze(container, onSelect, onEvent) {
   const THREE = window.THREE;
-  if (!THREE) return createCanvasMaze(container, onSelect);
+  if (!THREE) {
+    onEvent?.({ component: "renderer", event: "renderer.fallback", outcome: "fallback", error: { category: "three-unavailable" } });
+    return createCanvasMaze(container, onSelect);
+  }
   let renderer;
   try { renderer = new THREE.WebGLRenderer({ antialias: true }); }
-  catch { return createCanvasMaze(container, onSelect); }
+  catch {
+    onEvent?.({ component: "renderer", event: "renderer.fallback", outcome: "fallback", error: { category: "webgl-unavailable" } });
+    return createCanvasMaze(container, onSelect);
+  }
   container.replaceChildren(renderer.domElement);
   container.dataset.renderer = "webgl";
   const canvas = renderer.domElement;
@@ -77,13 +83,17 @@ export function createMaze(container, onSelect) {
   photograph = createPhotograph(THREE, container, camera, () => content, () => {
     stopEffects();
     for (const mesh of meshes) mesh.scale.setScalar(1);
-  }, toyMaterials.ready);
+  }, toyMaterials.ready, onEvent);
   container.dataset.shading = "direct";
   createStudioRendering(THREE, renderer, scene, camera, container, invalidate).then((next) => {
     studio = next;
     studio?.resize(container.clientWidth, container.clientHeight);
     invalidate();
-  }).catch(() => { container.dataset.shading = "direct"; invalidate(); });
+  }).catch(() => {
+    onEvent?.({ component: "renderer", event: "shading.fallback", outcome: "fallback", error: { category: "composer-unavailable" } });
+    container.dataset.shading = "direct";
+    invalidate();
+  });
   /* Shared model resources live for the viewer lifetime. */
   const sharedMaterials = new Set([wood, ply]);
   function dispose(group) {
@@ -358,8 +368,12 @@ export function createMaze(container, onSelect) {
       const ownedContent = content, ownedGraph = graph, ownedMeshes = meshes;
       board.updateMatrixWorld(true);
       const baseTop = new THREE.Box3().setFromObject(board).max.y;
+      const seatingStarted = performance.now();
       seating.run(seatingInput(graph, baseTop)).then(result => {
-        if (!result || content !== ownedContent) return;
+        if (!result || content !== ownedContent) {
+          onEvent?.({ component: "seating", event: "seating.finish", outcome: result ? "superseded" : "canceled", durationMs: performance.now() - seatingStarted });
+          return;
+        }
         if (result.positions?.length !== ownedMeshes.length || !result.positions.every(point =>
           Array.isArray(point) && point.length === 3 && point.every(Number.isFinite))) throw new Error("Invalid toy contact result");
         ownedGraph.nodes.forEach((node, i) => {
@@ -377,9 +391,15 @@ export function createMaze(container, onSelect) {
         container.dataset.support = "ready";
         photoButton.disabled = false;
         document.getElementById("photo-status").textContent = "";
+        onEvent?.({ component: "seating", event: "seating.finish", outcome: "success", durationMs: performance.now() - seatingStarted });
         invalidate();
-      }).catch(() => {
+      }).catch((error) => {
         if (content !== ownedContent) return;
+        onEvent?.({
+          component: "seating", event: "seating.finish", outcome: "failure",
+          durationMs: performance.now() - seatingStarted,
+          error: { category: seatingCategory(error), message: error.message },
+        });
         container.dataset.support = "failed";
         document.getElementById("photo-status").textContent = "Studio photo unavailable on this device. You can still explore the map.";
       });

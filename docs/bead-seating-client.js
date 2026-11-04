@@ -7,9 +7,21 @@ export function seatingInput(graph, baseTop) {
   };
 }
 
+// Maps a seating error to a bounded evidence category. The messages come from
+// this module and the scene-side result validation, so the patterns stay in
+// one place next to the errors they classify.
+export function seatingCategory(error) {
+  const message = error?.message || "";
+  if (/deadline/i.test(message)) return "timeout";
+  if (/result unavailable/i.test(message)) return "message-protocol";
+  if (/Invalid toy contact/i.test(message)) return "invalid-result";
+  if (/unavailable/i.test(message)) return "worker-unavailable";
+  return "error";
+}
+
 // Only numeric geometry crosses this worker boundary. A canceled generation
 // settles its promise and cannot update the next map, even after a late event.
-export function createBeadSeating(WorkerClass = globalThis.Worker) {
+export function createBeadSeating(WorkerClass = globalThis.Worker, { deadlineMs = 180000 } = {}) {
   let worker, settle, timer;
   function cancel() {
     clearTimeout(timer); timer = undefined;
@@ -51,7 +63,7 @@ export function createBeadSeating(WorkerClass = globalThis.Worker) {
         };
         owned.onerror = event => { event.preventDefault?.(); finish(null, new Error("Toy contact worker unavailable")); };
         owned.onmessageerror = () => finish(null, new Error("Toy contact result unavailable"));
-        timer = setTimeout(() => finish(null, new Error("Toy contact deadline exceeded")), 180000);
+        timer = setTimeout(() => finish(null, new Error("Toy contact deadline exceeded")), deadlineMs);
         try { owned.postMessage(input); } catch (error) { finish(null, error); }
       });
     },

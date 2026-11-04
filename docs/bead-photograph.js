@@ -6,7 +6,7 @@ import { createPhotoDenoising, readLinearImage } from "./photo-denoising.js";
 import { renderPhotoGuides } from "./photo-guides.js";
 import { createPhotoStage } from "./photo-stage.js";
 
-export function createPhotograph(THREE, container, sourceCamera, getContent, stopMotion, materialsReady = Promise.resolve()) {
+export function createPhotograph(THREE, container, sourceCamera, getContent, stopMotion, materialsReady = Promise.resolve(), onEvent) {
   const button = document.getElementById("studio-photo");
   const save = document.getElementById("save-photo");
   const status = document.getElementById("photo-status");
@@ -57,7 +57,10 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
     delete container.dataset.photoDenoising;
   }
 
-  function fail() { close("Studio photo unavailable on this device. You can still explore the map."); }
+  function fail(category) {
+    onEvent?.({ component: "photo", event: "photo.fail", outcome: "failure", error: { category } });
+    close("Studio photo unavailable on this device. You can still explore the map.");
+  }
   // The single photographic finish: draws `image` through tone curve, edge
   // rolloff and sensor grain onto the displayed canvas — the same pixels the
   // save handler downloads.
@@ -125,7 +128,7 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
       if (status.textContent !== message) status.textContent = message;
       if (tracer.samples < LIMIT) frame = requestAnimationFrame(draw);
       else refine();
-    } catch { fail(); }
+    } catch { fail("draw-error"); }
   }
 
   async function refine() {
@@ -170,7 +173,7 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
       const { StudioPathTracer, PhysicalCamera, GradientEquirectTexture, DenoiseMaterial, FullScreenQuad } = vendor;
       if (request !== generation) return;
       renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true, powerPreference: "high-performance" });
-      if (!renderer.capabilities.isWebGL2 || !renderer.extensions.has("EXT_color_buffer_float")) { fail(); return; }
+      if (!renderer.capabilities.isWebGL2 || !renderer.extensions.has("EXT_color_buffer_float")) { fail("capability"); return; }
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1;
@@ -188,7 +191,7 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
         return new Promise((resolve) => {
           function poll() {
             if (!active || request !== generation || gl.isContextLost() || programs.every((program) => program.isReady())) resolve(scene);
-            else if (performance.now() > deadline) { resolve(scene); if (request === generation) fail(); }
+            else if (performance.now() > deadline) { resolve(scene); if (request === generation) fail("shader-compile-deadline"); }
             else setTimeout(poll, 16);
           }
           poll();
@@ -202,7 +205,7 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
       renderer.domElement.className = "photo-canvas";
       renderer.domElement.setAttribute("aria-hidden", "true");
       renderer.domElement.hidden = true;
-      renderer.domElement.addEventListener("webglcontextlost", (event) => { event.preventDefault(); if (active && request === generation) fail(); });
+      renderer.domElement.addEventListener("webglcontextlost", (event) => { event.preventDefault(); if (active && request === generation) fail("context-lost"); });
       container.append(renderer.domElement);
       size();
 
@@ -345,7 +348,7 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
       };
       tracer.setScene(scene, camera);
       updateCamera();
-    } catch { if (request === generation) fail(); }
+    } catch { if (request === generation) fail("open-error"); }
   }
 
   button.addEventListener("click", () => { if (active) close(); else open(); });

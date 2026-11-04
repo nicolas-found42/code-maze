@@ -5,11 +5,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import { createApp } from './server.mjs';
+import { writeFailureReport } from '../lib/review-report.mjs';
 
 const fixture = await mkdtemp(path.join(os.tmpdir(), 'maze-studio-'));
 const output = new URL('../.scratch/verification/studio/', import.meta.url);
 const app = createApp({ repository: fixture });
 let browser;
+const errors = [];
 try {
   for (const group of ['src', 'docs', 'test']) {
     await mkdir(path.join(fixture, group));
@@ -20,7 +22,6 @@ try {
   const base = `http://127.0.0.1:${app.address().port}`;
   browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'chrome' });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 }, reducedMotion: 'reduce' });
-  const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.goto(base);
@@ -143,6 +144,9 @@ try {
   assert.match(await degraded.locator('#detail-meta').textContent(), /file-0/);
   assert.equal(await degraded.locator('.photo-canvas').count(), 0);
   console.log('Studio passed: lit RGB paint, actual generated meshes, progressive samples, PNG export, orbit reset, selection/rescan/context cleanup, repeat contexts, mobile resize, 600-node map, context loss and unavailable bundle recovery.');
+} catch (error) {
+  await writeFailureReport(output.pathname, "studio-review", { error, errors });
+  throw error;
 } finally {
   await browser?.close();
   app.closeAllConnections(); app.close();
