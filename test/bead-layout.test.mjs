@@ -85,7 +85,15 @@ test("the maze mixes high loops, corkscrews, and low winding paths with clear cr
       assert.ok(winding(main, [0, 2]) > Math.PI * 2.5, "corkscrews make multiple horizontal revolutions");
     } else {
       assert.ok(Math.max(...main.map((point) => point[1])) < tallest * 0.5, "winding tracks stay close to the board");
-      const signs = main.slice(1).map((point, index) => Math.sign(point[0] - main[index][0])).filter(Boolean);
+      // Count back-and-forth reversals against the run's own chord
+      // perpendicular, not world x — pose rotation must not change the answer.
+      const chord = [main.at(-1)[0] - main[0][0], main.at(-1)[2] - main[0][2]];
+      const perp = [-chord[1], chord[0]];
+      const signs = main.slice(1).map((point, index) => {
+        const a = perp[0] * main[index][0] + perp[1] * main[index][2];
+        const b = perp[0] * point[0] + perp[1] * point[2];
+        return Math.sign(b - a);
+      }).filter(Boolean);
       assert.ok(signs.filter((sign, index) => index && sign !== signs[index - 1]).length >= 2, "low paths wind back and forth");
     }
   }
@@ -104,6 +112,40 @@ test("beads clear the other intertwined wires", () => {
     const center = [node.x, node.y, node.z];
     for (let i = 1; i < rail.points.length; i++) {
       assert.ok(distanceToSegment(center, rail.points[i - 1], rail.points[i]) > 30, `${node.id} intersects another track`);
+    }
+  }
+});
+
+test("real-map group shape with singleton batches weaves without throwing", () => {
+  // The production failure class: one 40-file group beside singletons and
+  // small batches (sizes [40,1,1,10,6]) — only ever reproduced against the
+  // live scan, never by the two-group synthetic maps above.
+  const groups = [
+    { id: "docs/", label: "docs/", color: "#3fa34d" },
+    { id: "lib/", label: "lib/", color: "#8a5ad6" },
+    { id: "", label: "", color: "#d68a2f" },
+    { id: "scripts/", label: "scripts/", color: "#c64639" },
+    { id: "test/", label: "test/", color: "#2f9d8a" },
+  ];
+  const sizes = [40, 1, 1, 10, 6];
+  let index = 0;
+  const nodes = [];
+  groups.forEach((group, groupIndex) => {
+    for (let i = 0; i < sizes[groupIndex]; i++, index++) {
+      nodes.push({ id: `file-${index}`, label: `file-${index}`, group: group.id });
+    }
+  });
+  const graph = positionGraph({ groups, nodes, edges: [] });
+  assert.equal(graph.nodes.length, 58);
+  const kinds = new Set(graph.rails.map((rail) => rail.kind));
+  assert.ok(kinds.has("tall-loop") && kinds.has("corkscrew") && kinds.has("low-winding"), "all three track kinds present");
+  for (const node of graph.nodes) assert.ok(node.y >= 62, `${node.id} slot clears the board for seating`);
+  for (const rail of graph.rails) {
+    assert.ok(rail.points.length >= 2, `${rail.id} has a physical run`);
+    assert.ok(Math.abs(rail.points[0][1] - 37.5) < 1e-6 && Math.abs(rail.points.at(-1)[1] - 37.5) < 1e-6, `${rail.id} seats in its pads`);
+    for (const [x, , z] of rail.points) {
+      assert.ok(Math.abs(x) < graph.width / 2);
+      assert.ok(Math.abs(z) < graph.depth / 2);
     }
   }
 });

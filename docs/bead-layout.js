@@ -39,7 +39,11 @@ function connector(points, a, b, upA, upB) {
 function makeTrack(kind, rank, counts, sequence, members = 18) {
   // Compact the track for sparse runs so few-bead rails read like real toys
   // instead of long bare wires; dense runs keep the full footprint.
-  const fit = Math.min(1, Math.max(0.6, 0.62 + members / 26));
+  // Compaction must keep bend curvature inside the bead's bore clearance:
+  // tall-loop's z-wave and the low winding's S-bend both exceed the ±22-axial
+  // sagitta limit (1.75) once fit drops below ~0.75, leaving bead spans that
+  // clear no bore at all (reproduced by the singleton-batch regression).
+  const fit = Math.min(1, Math.max(0.75, 0.62 + members / 26));
   const points = [];
   let from, to, opening;
   if (kind === "tall-loop") {
@@ -284,14 +288,21 @@ export function positionGraph(graph) {
     const members = batches[index].members;
     const slots = [];
     const first = from + (to - from) * 0.035, last = to - (to - from) * 0.035;
-    for (let fraction = first; fraction <= last; fraction += 6 / length) {
-      const candidate = pointAlong(points, fraction, lengths);
-      if (!clearsBore(points, lengths, fraction, candidate)) continue;
-      if ((space.nearest(candidate.position, rail.id)?.distance ?? Infinity) <= 32) continue;
-      if (nodes.some((other) => distance(candidate.position, [other.x, other.y, other.z]) <= 54)) continue;
-      if (slots.some((other) => distance(candidate.position, other.position) <= 54)) continue;
-      slots.push({ ...candidate, fraction });
-    }
+    const collectSlots = (stride, nodeClearance) => {
+      for (let fraction = first; fraction <= last; fraction += stride / length) {
+        const candidate = pointAlong(points, fraction, lengths);
+        // Beads below the seat line cannot be seated on the board (the
+        // seating worker rejects any bore intersecting the base).
+        if (candidate.position[1] < 62) continue;
+        if (!clearsBore(points, lengths, fraction, candidate)) continue;
+        if ((space.nearest(candidate.position, rail.id)?.distance ?? Infinity) <= 32) continue;
+        if (nodes.some((other) => distance(candidate.position, [other.x, other.y, other.z]) <= nodeClearance)) continue;
+        if (slots.some((other) => distance(candidate.position, other.position) <= 54)) continue;
+        slots.push({ ...candidate, fraction });
+      }
+    };
+    collectSlots(6, 54);
+    if (slots.length < members.length) collectSlots(3, 50);
     if (slots.length < members.length) throw new Error(`Cannot place ${rail.id} with physical bead clearance (${slots.length} slots for ${members.length} files).`);
     members.forEach((node, i) => {
       const slot = members.length === 1 ? Math.floor(slots.length / 2) : Math.round(i / (members.length - 1) * (slots.length - 1));

@@ -90,9 +90,10 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
     // Auxiliary raster passes must reach the same distant sweep as the tracer.
     camera.far = Math.max(camera.far, stageSpan * 64);
     camera.updateProjectionMatrix();
-    // The copied layout has been converted to metres. Keep the toy in focus
-    // like a stopped-down product photograph, rather than a miniature diorama.
-    camera.fStop = 16;
+    // The copied layout has been converted to metres. f/5.6 keeps the toy
+    // sharp while background falloff and slight foreground softness read as
+    // lens behavior instead of a pin-sharp CG render.
+    camera.fStop = 5.6;
     camera.focusDistance = camera.position.distanceTo(new THREE.Box3().setFromObject(getContent()).getCenter(new THREE.Vector3()).multiplyScalar(SCALE));
     camera.apertureBlades = 7;
     camera.apertureRotation = 0;
@@ -329,7 +330,7 @@ export function createPhotograph(THREE, container, sourceCamera, getContent, sto
         grainPixels.data[i + 3] = 255;
       }
       grainContext.putImageData(grainPixels, 0, 0);
-      const grainTexture = new THREE.CanvasTexture(grainCanvas);
+      grainTexture = new THREE.CanvasTexture(grainCanvas);
       grainTexture.wrapS = grainTexture.wrapT = THREE.RepeatWrapping;
       finishQuad.material.uniforms.tGrain.value = grainTexture;
       tracer.renderToCanvasCallback = (target) => {
