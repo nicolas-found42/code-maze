@@ -96,11 +96,28 @@ The UI review also uses Chrome (or `BROWSER_CHANNEL=chromium`). It exercises the
 
 The fidelity review captures fixed-camera hero, close, low, selected and mobile views, checks shader errors and responsive denoiser switching, verifies stable GPU resource counts after rescans, exercises a 600-file map, and checks interaction with unavailable studio tools/textures. Screenshots and frame measurements go to `.scratch/verification/fidelity/`. Frame measurements describe the local test machine, not a cross-device performance guarantee. Geometry tests independently raycast every bore and check shell winding and layout clearance. Rebuild the pinned modeling/rendering assets with `npm run assets:3d` after installing development dependencies.
 
+### Diagnostics and evidence
+
+Failures leave a durable record instead of vanishing with the page. The server and the scan CLI append bounded JSON-lines events to `.evidence/` (override with `CODE_MAZE_EVIDENCE_DIR`): every scan with its outcome, duration, and error category; every server run with pid, port, and stop signal; and browser diagnostics that the app flushes to the server when a scan fails, bound to the same operation id. The browser also keeps a small in-tab ring of page errors and renderer fallbacks that survives reloads.
+
+Investigate afterwards with the retrieval CLI — no server or reproduction needed:
+
+```sh
+node scripts/evidence.mjs summary                 # server runs, outcomes, recent failures
+node scripts/evidence.mjs show <operation-id>     # the full chain for one operation
+node scripts/evidence.mjs list --event scan.finish
+```
+
+`X-Operation-Id` on any API response identifies the operation; `--tz`, `--since`/`--until`, and `--dir` filter or relocate. Full field guide and runbook: [docs/observability.md](../observability.md). Recording is bounded, secret-stripped, path-redacted, and never crashes the app when the store is unwritable.
+
 The active implementation lives in:
 
 - `lib/scan-repository.mjs`: file discovery and graph generation.
 - `scripts/server.mjs`: local scan API and app server.
 - `scripts/scan.mjs`: CLI snapshot generation.
+- `lib/evidence.mjs`: bounded JSON-lines evidence store (rotation, redaction, failure-safe writes).
+- `scripts/evidence.mjs`: read-only retrieval CLI (`summary`, `show`, `list`).
+- `docs/diagnostics.js`: browser failure ring, reload persistence, and server flush.
 - `docs/codebase-map.js`: scan controls, file search, and selection.
 - `docs/bead-layout.js`: continuous directory tracks, bead spacing, positions, and tangents.
 - `docs/bead-scene.js`: Three.js rendering, camera fitting, labels, picking, and reference highlights.

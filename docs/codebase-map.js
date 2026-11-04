@@ -1,6 +1,7 @@
 import { createMaze, positionGraph } from "./bead-scene.js";
 import { motion, revealPlayground } from "./playground-motion.js";
 import { createDiscoveryGuide } from "./discovery-guide.js";
+import { createDiagnostics, installDiagnostics } from "./diagnostics.js";
 
 try { window.THREE = await import("./vendor/three.module.js"); } catch { /* the canvas fallback needs no Three.js */ }
 
@@ -11,6 +12,8 @@ const status = document.getElementById("status");
 const search = document.getElementById("file-search");
 const list = document.getElementById("file-list");
 const scene = document.getElementById("scene");
+const diagnostics = createDiagnostics({ snapshot: () => scene?.dataset ?? {} });
+installDiagnostics(diagnostics);
 let graph;
 let selected;
 let maze;
@@ -75,7 +78,7 @@ function validateGraph(data) {
 function showGraph(data) {
   graph = validateGraph(data);
   selected = undefined;
-  if (!maze) maze = createMaze(scene, selectFile);
+  if (!maze) maze = createMaze(scene, selectFile, (event) => diagnostics.record(event));
   maze.setGraph(positionGraph(graph));
   maze.setLabels(document.getElementById("show-labels").checked);
   const flatView = scene.dataset.renderer === "canvas2d";
@@ -116,18 +119,27 @@ async function scan(input) {
   pathInput.disabled = true;
   status.textContent = "Scanning local files…";
   status.dataset.state = "loading";
+  const started = performance.now();
+  let operationId;
   try {
     const response = await fetch("/api/scan", input === undefined ? { cache: "no-store" } : {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path: input }),
     });
+    operationId = response.headers.get("x-operation-id") || undefined;
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || `Scan returned HTTP ${response.status}.`);
     showGraph(data);
     status.dataset.state = "ready";
+    diagnostics.record({ component: "scan", event: "scan.finish", outcome: "success", op: operationId, durationMs: performance.now() - started });
   } catch (error) {
     status.textContent = `Scan failed: ${error.message}${graph ? ` Still showing ${graph.repository.name}.` : ""}`;
     status.dataset.state = "error";
-  } finally { submit.disabled = false; pathInput.disabled = false; }
+    diagnostics.record({
+      component: "scan", event: "scan.finish", outcome: "failure", op: operationId,
+      durationMs: performance.now() - started,
+      error: { category: operationId ? "server" : "network", message: error.message },
+    });
+  } finally { submit.disabled = false; pathInput.disabled = false; diagnostics.flush("scan", operationId); }
 }
 form.addEventListener("submit", (event) => { event.preventDefault(); scan(pathInput.value); });
 search.addEventListener("input", () => { if (graph) renderFiles(); });
@@ -143,5 +155,14 @@ if (document.body.dataset.source === "snapshot") {
     showGraph(await response.json());
     status.dataset.state = "ready";
     status.textContent += " Saved snapshot. Run npm start locally to scan another repository.";
-  } catch (error) { status.textContent = `Cannot load the saved map: ${error.message}`; status.dataset.state = "error"; }
-} else { await scan(); }
+  } catch (error) {
+    status.textContent = `Cannot load the saved map: ${error.message}`;
+    status.dataset.state = "error";
+    diagnostics.record({ component: "scan", event: "snapshot.load", outcome: "failure", error: { category: "snapshot", message: error.message } });
+  }
+} else {
+  fetch("/api/health", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((health) => {
+    if (health) diagnostics.record({ component: "diagnostics", event: "server.instance", outcome: "success", fields: { version: health.version, node: health.node, pid: health.pid, startedAt: health.startedAt } });
+  }).catch(() => { /* the map works without the health endpoint */ });
+  await scan();
+}

@@ -5,10 +5,13 @@ import os from "node:os";
 import path from "node:path";
 import { chromium } from "playwright";
 import { createApp } from "./server.mjs";
+import { writeFailureReport } from "../lib/review-report.mjs";
 
 const fixture = await mkdtemp(path.join(os.tmpdir(), "maze-contact-ui-"));
 const app = createApp({ repository: fixture });
+const output = new URL("../.scratch/verification/contact-browser/", import.meta.url);
 let browser;
+const errors = [];
 try {
   for (const group of ["src", "docs", "test"]) {
     await mkdir(path.join(fixture, group));
@@ -18,7 +21,6 @@ try {
   const origin = `http://127.0.0.1:${app.address().port}`;
   browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || "chrome" });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 }, reducedMotion: "reduce" });
-  const errors = [];
   page.on("pageerror", error => errors.push(error.message));
   page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
   await page.addInitScript(() => {
@@ -105,6 +107,9 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log("Contact browser passed: actual rendered poses, photo readiness, worker termination, responsive selection during work, rescan cancellation/stale message isolation, and error/malformed-result recovery.");
+} catch (error) {
+  await writeFailureReport(output.pathname, "contact-browser-review", { error, errors });
+  throw error;
 } finally {
   await browser?.close(); app.closeAllConnections(); app.close();
   await rm(fixture, { recursive: true, force: true });

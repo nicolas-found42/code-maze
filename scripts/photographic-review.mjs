@@ -5,11 +5,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import { createApp } from './server.mjs';
+import { writeFailureReport } from '../lib/review-report.mjs';
 
 const fixture = await mkdtemp(path.join(os.tmpdir(), 'maze-photograph-'));
 const output = new URL('../.scratch/verification/photographic/', import.meta.url);
 const app = createApp({ repository: fixture });
 let browser;
+const errors = [], external = [];
 try {
   for (const group of ['src', 'docs', 'test']) {
     await mkdir(path.join(fixture, group));
@@ -20,7 +22,6 @@ try {
   const origin = `http://127.0.0.1:${app.address().port}`;
   browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'chrome' });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 }, reducedMotion: 'reduce' });
-  const errors = [], external = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   await page.route('**/*', route => {
@@ -164,6 +165,9 @@ try {
   assert.deepEqual(models, [], 'unsupported WebGPU skips the model and guide work');
   assert.deepEqual(fallbackErrors, []);
   console.log('Photographic validation passed: converged hero/close/low/mobile, seamless low-angle backdrop, actual guided OIDN, linear albedo and encoded normals, PNG export, device/resource release, cancellation during initialization/inference, local-only assets, missing-model fallback. Photographic indistinguishability is not established by this test.');
+} catch (error) {
+  await writeFailureReport(output.pathname, "photographic-review", { error, errors, external });
+  throw error;
 } finally {
   await browser?.close(); app.closeAllConnections(); app.close();
   await rm(fixture, { recursive: true, force: true });

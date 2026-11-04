@@ -49,6 +49,8 @@ Want them to spin it themselves? [Export an interactive viewer](docs/readme/guid
 
 The maze shows connections the scanner can find in the files. It won’t capture every connection made while a program runs. [Supported languages and limits →](docs/readme/guide.md#what-the-scanner-maps)
 
+If a scan ever fails, the failure is recorded with enough context to diagnose later — operation id, error category, and what the browser was doing at the time. See [diagnostics & evidence](docs/observability.md) or run `node scripts/evidence.mjs summary`.
+
 For keyboard controls, rendering details, CLI exports, tests, and project history, see the [technical guide](docs/readme/guide.md).
 
 [MIT license](LICENSE) · [Third-party libraries and assets](docs/vendor/fidelity-libraries.md) · [Original bead maze material](docs/readme/guide.md#original-bead-maze-material)

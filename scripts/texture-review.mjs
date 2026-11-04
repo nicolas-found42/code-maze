@@ -5,9 +5,12 @@ import os from "node:os";
 import path from "node:path";
 import { chromium } from "playwright";
 import { createApp } from "./server.mjs";
+import { writeFailureReport } from "../lib/review-report.mjs";
 
 const fixture = await mkdtemp(path.join(os.tmpdir(), "maze-textures-"));
 const app = createApp({ repository: fixture }); let browser;
+const output = new URL("../.scratch/verification/texture/", import.meta.url);
+const errors = [];
 const materials = await readFile("docs/bead-materials.js", "utf8");
 const vendor = await readFile("docs/vendor/pathtracer.js", "utf8");
 try {
@@ -18,7 +21,7 @@ try {
   app.listen(0, "127.0.0.1"); await once(app, "listening");
   browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || "chrome" });
   for (const mode of ["delayed", "deadline", "corrupt"]) {
-    const page = await browser.newPage({ reducedMotion: "reduce" }), errors = [];
+    const page = await browser.newPage({ reducedMotion: "reduce" });
     page.on("pageerror", e => errors.push(e.message));
     page.on("console", m => { if (m.type() === "error") errors.push(m.text()); });
     let release;
@@ -67,6 +70,9 @@ try {
     release(); await page.close();
     console.log(`Texture ${mode}: readiness/cancellation/fallback and actual traced samples passed.`);
   }
+} catch (error) {
+  await writeFailureReport(output.pathname, "texture-review", { error, errors });
+  throw error;
 } finally {
   await browser?.close(); app.closeAllConnections(); app.close(); await rm(fixture, { recursive: true, force: true });
 }

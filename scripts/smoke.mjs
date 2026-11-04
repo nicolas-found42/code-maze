@@ -6,12 +6,17 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { createApp } from "./server.mjs";
+import { createEvidenceLog, readEvents } from "../lib/evidence.mjs";
+import { writeFailureReport } from "../lib/review-report.mjs";
 
 const project = fileURLToPath(new URL("../", import.meta.url));
 const fixture = await mkdtemp(path.join(os.tmpdir(), "code-maze-smoke-"));
 const output = path.join(project, ".scratch/verification");
-const app = createApp({ repository: fixture });
+const evidence = createEvidenceLog({ dir: path.join(fixture, "evidence"), component: "server" });
+const app = createApp({ repository: fixture, evidence });
 let browser;
+const errors = [];
+const scanOps = [];
 try {
   await mkdir(path.join(fixture, "src"));
   await writeFile(path.join(fixture, "src/main.js"), "import './helper.js';");
@@ -23,9 +28,9 @@ try {
   const base = `http://127.0.0.1:${app.address().port}`;
   browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || "chrome", headless: true });
   const page = await browser.newPage({ viewport: { width: 1320, height: 1000 }, deviceScaleFactor: 2 });
-  const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("response", (response) => {
+    if (response.url().endsWith("/api/scan")) scanOps.push(response.headers()["x-operation-id"]);
     if (response.status() >= 400 && !response.url().endsWith("/api/scan")) errors.push(`HTTP ${response.status()} ${response.url()}`);
   });
   await page.goto(base);
@@ -94,6 +99,19 @@ try {
   await page.getByRole("button", { name: "Generate map", exact: true }).click();
   await page.waitForFunction(() => document.querySelector("#status").dataset.state === "error");
   assert.match(await page.locator("#status").textContent(), /Still showing/);
+  const failedOp = scanOps.at(-1);
+  assert.ok(failedOp, "the failed scan response carries an x-operation-id");
+  const ring = await page.evaluate(() => JSON.parse(sessionStorage.getItem("code-maze:diagnostics") || "null"));
+  assert.ok(ring?.sessionId && Array.isArray(ring.events), "diagnostics ring exists with a session id and survives in sessionStorage");
+  const failureRoot = path.join(fixture, "missing");
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const stored = await readEvents({ dir: evidence.dir, op: failedOp, includeChildren: true, limit: 100 });
+    const browserFailure = stored.events.some((event) => event.component === "scan" && event.event === "scan.finish" && event.outcome === "failure");
+    const report = stored.events.some((event) => event.event === "client.report");
+    if (browserFailure && report) break;
+    if (attempt === 49) assert.fail(`diagnostics bundle for ${failedOp} never reached the evidence store: browser=${browserFailure} report=${report} events=${JSON.stringify(stored.events)}`);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
   await page.getByLabel("Local repository path").fill(path.join(fixture, "src"));
   await page.getByRole("button", { name: "Generate map", exact: true }).click();
   await page.waitForFunction(() => document.querySelector("#status").dataset.state === "ready");
@@ -126,9 +144,13 @@ try {
   } finally { snapshotApp.closeAllConnections(); await new Promise((resolve) => snapshotApp.close(resolve)); }
   assert.deepEqual(errors, []);
   console.log(`Browser smoke passed: WebGL, selection, search, rescan, errors, mobile canvas fallback, and static export.\nScreenshots: ${output}`);
+} catch (error) {
+  await writeFailureReport(output, "smoke", { error, errors, scanOps });
+  throw error;
 } finally {
   await browser?.close();
   app.closeAllConnections();
   await new Promise((resolve) => app.close(resolve));
+  await evidence.close();
   await rm(fixture, { recursive: true, force: true });
 }
