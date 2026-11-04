@@ -23,7 +23,7 @@ export function createPhotoStage(THREE, span, center, ground) {
   geometry.setIndex([...flat.index.array, ...Array.from(sweep.index.array, i => i + flat.attributes.position.count)]);
   flat.dispose(); sweep.dispose();
   const stage = new THREE.Mesh(geometry,
-    new THREE.MeshStandardMaterial({ color: 0xf4f1e9, roughness: 0.86 }));
+    new THREE.MeshStandardMaterial({ color: 0xf7f4ed, roughness: 0.92 }));
   stage.position.set(center.x, ground, center.z);
   return stage;
 }
